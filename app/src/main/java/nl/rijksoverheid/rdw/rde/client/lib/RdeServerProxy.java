@@ -1,4 +1,4 @@
-package nl.rijksoverheid.rdw.rde.clientlib.remoteapi;
+package nl.rijksoverheid.rdw.rde.client.lib;
 
 import android.os.StrictMode;
 import android.util.Base64;
@@ -16,6 +16,8 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+
+import nl.rijksoverheid.rdw.rde.remoteapi.*;
 
 public class RdeServerProxy
 {

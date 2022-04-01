@@ -24,13 +24,15 @@ import java.security.GeneralSecurityException;
 
 import javax.crypto.spec.SecretKeySpec;
 
-import nl.rijksoverheid.rdw.rde.clientlib.apdusimulator.*;
-import nl.rijksoverheid.rdw.rde.clientlib.crypto.*;
-import nl.rijksoverheid.rdw.rde.clientlib.documents.*;
-import nl.rijksoverheid.rdw.rde.clientlib.remoteapi.*;
-import nl.rijksoverheid.rdw.rde.clientlib.messaging.*;
-import nl.rijksoverheid.rdw.rde.clientlib.messaging.zipV2.*;
-import nl.rijksoverheid.rdw.rde.clientlib.mrtdfiles.*;
+import nl.rijksoverheid.rdw.rde.apdusimulator.*;
+import nl.rijksoverheid.rdw.rde.client.lib.RdeDocument;
+import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
+import nl.rijksoverheid.rdw.rde.crypto.*;
+import nl.rijksoverheid.rdw.rde.documents.*;
+import nl.rijksoverheid.rdw.rde.remoteapi.*;
+import nl.rijksoverheid.rdw.rde.messaging.*;
+import nl.rijksoverheid.rdw.rde.messaging.zipV2.*;
+import nl.rijksoverheid.rdw.rde.mrtdfiles.*;
 
 public class DecryptMessageActivity extends AppCompatActivity
 {

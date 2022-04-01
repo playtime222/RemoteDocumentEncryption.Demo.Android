@@ -13,7 +13,14 @@ import androidx.annotation.RequiresApi;
 
 import java.util.Arrays;
 
-import nl.rijksoverheid.rdw.rde.clientlib.remoteapi.RdeServerProxy;
+import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
+import nl.rijksoverheid.rdw.rde.apdusimulator.*;
+import nl.rijksoverheid.rdw.rde.crypto.*;
+import nl.rijksoverheid.rdw.rde.documents.*;
+import nl.rijksoverheid.rdw.rde.remoteapi.*;
+import nl.rijksoverheid.rdw.rde.messaging.*;
+import nl.rijksoverheid.rdw.rde.messaging.zipV2.*;
+import nl.rijksoverheid.rdw.rde.mrtdfiles.*;
 
 public class MessagesListActivity extends Activity implements AdapterView.OnItemClickListener
 {

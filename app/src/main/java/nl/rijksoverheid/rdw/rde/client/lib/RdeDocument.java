@@ -1,9 +1,7 @@
-package nl.rijksoverheid.rdw.rde.clientlib.documents;
+package nl.rijksoverheid.rdw.rde.client.lib;
 
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
-
-import androidx.annotation.NonNull;
 
 import net.sf.scuba.smartcards.CardService;
 import net.sf.scuba.smartcards.CardServiceException;
@@ -11,6 +9,11 @@ import net.sf.scuba.smartcards.CommandAPDU;
 import net.sf.scuba.smartcards.ISO7816;
 import net.sf.scuba.util.Hex;
 
+import nl.rijksoverheid.rdw.rde.documents.RdeDocumentConfig;
+import nl.rijksoverheid.rdw.rde.documents.RdeDocumentEnrollmentInfo;
+import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
+import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
+import nl.rijksoverheid.rdw.rde.mrtdfiles.RdeDocumentContentAuthentication;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jmrtd.BACKey;
 import org.jmrtd.PassportService;
@@ -35,8 +38,8 @@ import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.spec.SecretKeySpec;
 
-import nl.rijksoverheid.rdw.rde.clientlib.messaging.RdeSessionArgs;
-import nl.rijksoverheid.rdw.rde.clientlib.mrtdfiles.*;
+import nl.rijksoverheid.rdw.rde.messaging.*;
+import nl.rijksoverheid.rdw.rde.mrtdfiles.*;
 
 //Interactions with the NFC
 public class RdeDocument implements AutoCloseable
@@ -310,7 +313,6 @@ public class RdeDocument implements AutoCloseable
         return passportService.getWrapper().wrap(command).getBytes();
     }
 
-    @NonNull
     private CommandAPDU createRbCommandAPDU(final int shortFileId, final int fidByteCount)
     {
         int sfi = 0x80 | (shortFileId & 0xFF);
