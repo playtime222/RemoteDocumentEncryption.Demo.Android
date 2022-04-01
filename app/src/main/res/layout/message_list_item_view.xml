@@ -1,0 +1,47 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="110dp"
+        android:padding="6dp" >
+
+        <TextView
+            android:id="@+id/messageId"
+            android:layout_width="200dp"
+            android:layout_height="24dp"
+            android:textSize="16sp"
+            android:layout_alignParentTop="true"
+            android:text="...message id..."
+            android:contentDescription="Message Id"
+            />
+        <TextView
+            android:id="@+id/whenSent"
+            android:layout_width="fill_parent"
+            android:layout_height="24dp"
+            android:layout_toRightOf="@id/messageId"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:text="...when sent..."
+            android:contentDescription="Sent"
+            android:textSize="16sp"
+            />
+
+        <TextView
+            android:id="@+id/whoFrom"
+            android:layout_width="fill_parent"
+            android:layout_height="24dp"
+            android:layout_below="@id/messageId"
+            android:layout_alignParentLeft="true"
+            android:contentDescription="Sender"
+            android:gravity="center_vertical"
+            android:text="....who from..."
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/shortNote"
+            android:layout_width="fill_parent"
+            android:layout_height="48dp"
+            android:layout_below="@id/whoFrom"
+            android:contentDescription="Note"
+            android:gravity="center_vertical"
+            android:text="...short note..."
+            android:textSize="16sp" />
+</RelativeLayout>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="381dp"
+        android:layout_height="24dp"
+        android:text="@string/enrollment_instructions"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="381dp"
+        android:layout_height="24dp"
+        android:text="@string/account_header"
+        android:textAlignment="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintBottom_toTopOf="@+id/editTextUserName" />
+
+    <EditText
+        android:id="@+id/editTextUserName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/hint_user_name"
+        android:inputType="textEmailAddress"
+        android:minHeight="48dp"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintBottom_toTopOf="@+id/editTextPassword"
+        />
+
+    <EditText
+        android:id="@+id/editTextPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/hint_password"
+        android:inputType="textPassword"
+        android:minHeight="48dp"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextUserName"
+        app:layout_constraintBottom_toTopOf="@+id/editTextEnrollmentId"
+        />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_marginTop="24dp"
+        android:layout_width="381dp"
+        android:layout_height="24dp"
+        android:text="@string/enrollment_token_header"
+        android:textAlignment="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintTop_toBottomOf="@+id/editTextPassword"
+        app:layout_constraintBottom_toTopOf="@+id/editTextEnrollmentId" />
+
+    <EditText
+        android:layout_marginTop="24dp"
+        android:id="@+id/editTextEnrollmentId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/hint_enrollment_token"
+        android:inputType="textShortMessage"
+        android:minHeight="48dp"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextPassword"
+        app:layout_constraintBottom_toTopOf="@+id/editTextDocumentId"
+        />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_marginTop="24dp"
+        android:layout_width="381dp"
+        android:layout_height="24dp"
+        android:text="@string/mrz_header"
+        android:textAlignment="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintTop_toBottomOf="@+id/editTextEnrollmentId"
+        app:layout_constraintBottom_toTopOf="@+id/editTextDocumentId" />
+
+    <EditText
+        android:layout_marginTop="24dp"
+        android:id="@+id/editTextDocumentId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/hint_document_id"
+        android:inputType="textLongMessage"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+
+        app:layout_constraintTop_toBottomOf="@+id/editTextEnrollmentId"
+        app:layout_constraintBottom_toTopOf="@id/editTextDob"
+        />
+
+    <EditText
+        android:id="@+id/editTextDob"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/hint_date_of_birth"
+        android:inputType="date"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextDocumentId"
+        app:layout_constraintBottom_toTopOf="@id/editTextDocDoe"
+        />
+
+    <EditText
+        android:id="@+id/editTextDocDoe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/hint_date_of_expiry"
+        android:inputType="date"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintTop_toBottomOf="@+id/editTextDob"
+        app:layout_constraintBottom_toTopOf="@id/editTextDisplayName"
+        />
+
+    <EditText
+        android:layout_marginTop="24dp"
+        android:id="@+id/editTextDisplayName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/hint_display_name"
+        android:inputType="textShortMessage"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintTop_toBottomOf="@+id/editTextDocDoe"
+        app:layout_constraintBottom_toTopOf="@id/buttonEnroll"
+        />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_marginTop="24dp"
+        android:layout_width="381dp"
+        android:layout_height="24dp"
+        android:text="@string/display_name_header"
+        android:textAlignment="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintTop_toBottomOf="@+id/editTextDocDoe"
+        app:layout_constraintBottom_toTopOf="@+id/editTextDisplayName" />
+
+    <Button
+        android:id="@+id/buttonEnroll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:text="@string/button_enroll"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
