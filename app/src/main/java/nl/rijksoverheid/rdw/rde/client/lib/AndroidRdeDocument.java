@@ -9,6 +9,8 @@ import net.sf.scuba.smartcards.CommandAPDU;
 import net.sf.scuba.smartcards.ISO7816;
 import net.sf.scuba.util.Hex;
 
+import nl.rijksoverheid.rdw.rde.documents.GeneralRdeException;
+import nl.rijksoverheid.rdw.rde.documents.RdeDocument;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentConfig;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentEnrollmentInfo;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
@@ -42,8 +44,7 @@ import nl.rijksoverheid.rdw.rde.messaging.*;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.*;
 
 //Interactions with the NFC
-public class RdeDocument implements AutoCloseable
-{
+public class AndroidRdeDocument implements AutoCloseable, RdeDocument {
     private CardService cardService;
     private PassportService passportService;
     private IsoDep isoDep;
@@ -53,12 +54,12 @@ public class RdeDocument implements AutoCloseable
     private Dg14Reader dg14Reader;
     private byte[] dg14Content;
 
-    private int toFileIdentifier(int shortFileIdentifer)
+    private int toFileIdentifier(int shortFileIdentifier)
     {
-        if (1 > shortFileIdentifer || shortFileIdentifer > 14)
+        if (1 > shortFileIdentifier || shortFileIdentifier > 14)
             throw new IllegalArgumentException();
 
-        return shortFileIdentifer + 0x100;
+        return shortFileIdentifier + 0x100;
     }
 
     public void open(Tag tag, BACKey bacKey)
@@ -98,16 +99,17 @@ public class RdeDocument implements AutoCloseable
 
     //TODO args -> which DGs et al?
     //TODO allow user to select a different dg as Fid/cont
+    @Override
     public RdeDocumentEnrollmentInfo getEnrollmentArgs(final UserSelectedEnrollmentArgs args)
-            throws GeneralSecurityException, IOException, CardServiceException
-    {
+            throws GeneralSecurityException, IOException, GeneralRdeException {
         if (args == null)
             throw new IllegalArgumentException();
 
         if (!isOpen())
             throw new IllegalStateException();
 
-        getDg14();
+        try {
+            getDg14();
 
         var fileContent = getFileContent(args.getShortFileId());
         dumpArgsAndContent(args, fileContent);
@@ -125,20 +127,24 @@ public class RdeDocument implements AutoCloseable
         //dump((AESSecureMessagingWrapper) caSessionInfo.getWrapper());
 
         var encryptedCommand = createEncryptedRbCommand(args.getShortFileId(), args.getFileByteCount());
+        } catch (CardServiceException e) {
+            e.printStackTrace();
+            throw new GeneralRdeException(e);
+        }
 
         var result = new RdeDocumentEnrollmentInfo();
         //result.setEnrollmentId(...);
-        result.setDisplayName(args.getDisplayName());
-        result.setShortFileId(args.getShortFileId());
-        result.setDataGroup14(dg14Content);
-        result.setFileContents(fileContent);
-        result.setFileReadLength(args.getFileByteCount());
-        result.setEncryptedCommand(encryptedCommand);
-        result.setPcdPrivateKey(caSessionInfo.getPCDPrivateKey().getEncoded());
-        result.setPcdPublicKey(caSessionInfo.getPCDPublicKey().getEncoded());
+//        result.setDisplayName(args.getDisplayName());
+//        result.setShortFileId(args.getShortFileId());
+//        result.setDataGroup14(dg14Content);
+//        result.setFileContents(fileContent);
+//        result.setFileReadLength(args.getFileByteCount());
+//        result.setEncryptedCommand(encryptedCommand);
+//        result.setPcdPrivateKey(caSessionInfo.getPCDPrivateKey().getEncoded());
+//        result.setPcdPublicKey(caSessionInfo.getPCDPublicKey().getEncoded());
 
         //TODO demo only
-        result.setRbResponse(getApduResponseForDecryption(encryptedCommand));
+//        result.setRbResponse(getApduResponseForDecryption(encryptedCommand));
 
         return result;
     }
@@ -222,8 +228,9 @@ public class RdeDocument implements AutoCloseable
         }
     }
 
+    @Override
     public byte[] getApduResponseForDecryption(RdeSessionArgs mca)
-            throws GeneralSecurityException, CardServiceException, IOException
+            throws GeneralSecurityException, GeneralRdeException, IOException
     {
         var keyAgreementAlgorithm = ChipAuthenticationInfo.toKeyAgreementAlgorithm(mca.getCaProtocolOid());
         var publicKey = getPublicKey(keyAgreementAlgorithm, mca.getPcdPublicKey());
@@ -233,12 +240,16 @@ public class RdeDocument implements AutoCloseable
         System.out.println("<<< DECRYPT SESSION PUB KEY");
 
         //System.out.println(dg14Adaptor.getCaSessionInfo().getCaInfo().getObjectIdentifier());
-        EACCAProtocol.sendPublicKey(new EACCAAPDUSender(cardService), passportService.getWrapper(), getDg14().getCaSessionInfo().getCaInfo().getObjectIdentifier(), null, publicKey);
-        System.out.println("DECRYPT SESSION WRAPPER: >>>");
-        dump((DESedeSecureMessagingWrapper)passportService.getWrapper());
-        System.out.println("<<< DECRYPT SESSION WRAPPER");
-
-        return getApduResponseForDecryption(mca.getCaEncryptedCommand());
+        try {
+            EACCAProtocol.sendPublicKey(new EACCAAPDUSender(cardService), passportService.getWrapper(), getDg14().getCaSessionInfo().getCaInfo().getObjectIdentifier(), null, publicKey);
+            System.out.println("DECRYPT SESSION WRAPPER: >>>");
+            dump((DESedeSecureMessagingWrapper)passportService.getWrapper());
+            System.out.println("<<< DECRYPT SESSION WRAPPER");
+            return getApduResponseForDecryption(mca.getCaEncryptedCommand());
+        } catch (CardServiceException e) {
+            e.printStackTrace();
+            throw new GeneralRdeException(e);
+        }
     }
 
     private PublicKey getPublicKey(final String caEphemeralPublicKeyAlgorithm, final byte[] pcdPublicKey) throws NoSuchAlgorithmException, InvalidKeySpecException

@@ -1,5 +1,7 @@
 package nl.rijksoverheid.rdw.rde.client;
 
+import org.bouncycastle.util.encoders.Base64;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
@@ -20,27 +22,21 @@ import org.jmrtd.BACKey;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import nl.rijksoverheid.rdw.rde.apdusimulator.*;
-import nl.rijksoverheid.rdw.rde.client.lib.RdeDocument;
+import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
-import nl.rijksoverheid.rdw.rde.crypto.*;
 import nl.rijksoverheid.rdw.rde.documents.*;
 import nl.rijksoverheid.rdw.rde.remoteapi.*;
-import nl.rijksoverheid.rdw.rde.messaging.*;
-import nl.rijksoverheid.rdw.rde.messaging.zipV2.*;
-import nl.rijksoverheid.rdw.rde.mrtdfiles.*;
 
-public class EnrollmentReadDocumentActivity extends AppCompatActivity
-{
+public class EnrollmentReadDocumentActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
 
     //public static final String ENROLLMENT_ID_EXTRA_TAG = "ENROLLMENT_ID";
     public static final String DISPLAY_NAME_EXTRA_TAG = "ENROLLMENT_DISPLAY_NAME";
+    private String authToken;
     private String displayName;
 
     @Override
-    protected void onCreate(@Nullable final Bundle savedInstanceState)
-    {
+    protected void onCreate(@Nullable final Bundle savedInstanceState) {
         nfcSettingsLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result ->
         {
             // nothing to do
@@ -51,12 +47,12 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onNewIntent(final Intent intent)
-    {
+    protected void onNewIntent(final Intent intent) {
         if (intent == null)
             throw new IllegalArgumentException();
 
         super.onNewIntent(intent);
+        authToken = intent.getStringExtra(ScanApiTokenActivity.API_TOKEN_EXTRA_TAG);
 
         if (!NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()))
             return;
@@ -69,84 +65,62 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity
         if (tag == null)
             return; //TODO failed
 
-        try
-        {
+        try {
 //            try(var d = new RdeDocument())
 //            {
 //                d.open(tag, bacKey);
 //                d.doTestRbCall();
 //            }
 
-            //TODO get 14/200 from enrollmentActivityData
-            final var args = getEnrollmentArgs(tag, bacKey, new UserSelectedEnrollmentArgs(14, 8));
+            try {
+                final var args = getEnrollmentArgs(tag, bacKey, new UserSelectedEnrollmentArgs(14, 8));
+                final var dto = new DocumentEnrolmentRequestArgs();
 
-            final var dto = new EnrollDocumentDto();
-            //dto.setEnrollmentId()
-            //dto.setDocumentSecurityObject(args.getDocumentSecurityObject()); //TODO Not set!
+                dto.setDisplayName(displayName);
+                dto.setFileId(args.getShortFileId());
+                dto.setFileContentsBase64(Base64.toBase64String(args.getFileContents()));
+                dto.setReadLength(args.getFileReadLength());
+                dto.setDataGroup14Base64(Base64.toBase64String(args.getDataGroup14()));
 
-            dto.setDisplayName(displayName);
+                //EndToEndTest.Test(bacKey, tag, args);
 
-            dto.setShortFileId(args.getShortFileId());
-            dto.setFileContents(args.getFileContents());
+                var result = new RdeServerProxy().enrol(dto, authToken);
 
-            dto.setFileReadLength(args.getFileReadLength());
-            dto.setEncryptedCommand(args.getEncryptedCommand());
+                if (result.isError()) {
+                    //TODO show and an error...
+                    return;
+                }
 
-            dto.setRbResponse(args.getRbResponse()); //TODO development only - remove as it exposes the encryption key.
+                final var nextIntent = new Intent(getApplicationContext(), MessagesListActivity.class);
 
-            dto.setPcdPublicKey(args.getPcdPublicKey());
-            dto.setPcdPrivateKey(args.getPcdPrivateKey());
-            dto.setDataGroup14(args.getDataGroup14());
-
-            //EndToEndTest.Test(bacKey, tag, args);
-
-            var result = new RdeServerProxy().send(dto);
-
-            if (result.getResult() != EnrollDocumentResult.Success)
-            {
-                //TODO show and an error...
-                return;
+                bacKeyStorage.write(PreferenceManager.getDefaultSharedPreferences(this));
+                startActivity(nextIntent);
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (GeneralRdeException e) {
+                e.printStackTrace();
             }
-
-            final var nextIntent = new Intent(getApplicationContext(), MessagesListActivity.class);
-
-            bacKeyStorage.write(PreferenceManager.getDefaultSharedPreferences(this));
-
-
-            startActivity(nextIntent);
-        }
-        catch (GeneralSecurityException e)
-        {
-            e.printStackTrace();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        catch (CardServiceException e)
-        {
-            e.printStackTrace();
+        } finally {
+            //TODO Why was this forced?
         }
     }
 
-    private RdeDocumentEnrollmentInfo getEnrollmentArgs(final Tag tag, final BACKey bacKey, final UserSelectedEnrollmentArgs args)
-            throws GeneralSecurityException, IOException, CardServiceException
-    {
-        try(final var doc = new RdeDocument())
-        {
+    private RdeDocumentEnrollmentInfo getEnrollmentArgs(final Tag tag, final BACKey bacKey,
+                                                        final UserSelectedEnrollmentArgs args)
+            throws GeneralSecurityException, IOException, GeneralRdeException {
+        try (final var doc = new AndroidRdeDocument()) {
             doc.open(tag, bacKey);
             return doc.getEnrollmentArgs(args);
-        }
-        catch(Exception ex)
-        {
+        } catch (CardServiceException ex) {
             ex.printStackTrace();
-            throw ex;
+            throw new GeneralRdeException(ex);
         }
     }
-    
+
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         super.onResume();
 
         //TODO hits here first. Set field?
@@ -160,8 +134,7 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity
             // nfc not available on the device
             return;
 
-        if (!nfcAdapter.isEnabled())
-        {
+        if (!nfcAdapter.isEnabled()) {
             nfcSettingsLauncher.launch(new Intent(Settings.ACTION_NFC_SETTINGS));
             return;
         }

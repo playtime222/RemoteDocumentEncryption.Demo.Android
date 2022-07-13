@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RDE Sample 2</string>
+    <string name="app_name">RDE Android Sample</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
@@ -53,5 +53,8 @@
     <string name="message_when_header">Sent:</string>
     <string name="message_note_header">Note:</string>
     <string name="message_content_header">Content:</string>
+    <string name="title_activity_scan_token">ScanToken</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 
 </resources>

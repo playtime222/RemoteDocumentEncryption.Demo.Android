@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+<!--    <domain-config>-->
+<!--        <domain includeSubdomains="true">192.168.178.12:45455</domain>-->
+<!--        <trust-anchors>-->
+<!--            <certificates src="@raw/yacert3"/>-->
+<!--&lt;!&ndash;            <certificates src="@raw/yacert2"/>&ndash;&gt;-->
+<!--&lt;!&ndash;            <certificates src="@raw/yacert"/>&ndash;&gt;-->
+<!--        </trust-anchors>-->
+<!--    </domain-config>-->
+</network-security-config>

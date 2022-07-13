@@ -1,7 +1,11 @@
 package nl.rijksoverheid.rdw.rde.client.lib;
 
+import static org.apache.http.conn.ssl.SSLSocketFactory.SSL;
+
 import android.os.StrictMode;
 import android.util.Base64;
+
+import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -16,28 +20,36 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import nl.rijksoverheid.rdw.rde.remoteapi.*;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 public class RdeServerProxy
 {
-    //TODO inject settings/providers
-    private static final String enrollmentUrl = "http://192.168.178.12:8080/api/document";
-    private static final String messageListUrl = "http://192.168.178.12:8080/api/message/list";
-
-    //Inject
-    private static final String userName = "a1@mefitihe.com"; //Actually email
-    private static final String password = "a1";
-
-    private final static MessageListResult messageListErrorResult = new MessageListResult(true);
-    private final static MessageGetResult messageGetErrorResult = new MessageGetResult(true);
+    //TODO inject settings/providers and use an identity/discovery endpoint on the server
+    private static final String enrollmentUrl = "https://192.168.178.12:45455/api/mobiledevices/document";
+    //Urls in the list should are fully qualified.
+    private static final String messageListUrl = "https://192.168.178.12:45455/api/mobiledevices/messages/received";
 
     public RdeServerProxy()
     {
 
     }
 
-    public DocumentAddResult send(final EnrollDocumentDto enrollmentArgs)
+    public HttpResponse<DocumentEnrolmentResponse> enrol(final DocumentEnrolmentRequestArgs enrollmentArgs, final String authToken)
     {
         if (enrollmentArgs == null)
             throw new IllegalArgumentException();
@@ -46,154 +58,122 @@ public class RdeServerProxy
         StrictMode.setThreadPolicy(policy);
 
         //TODO map RdeDocumentEnrollmentInfo to the API DTO...
-        try
-        {
-            final var connection = (HttpURLConnection) new URL(enrollmentUrl).openConnection();
+        try {
+            final var requestBodyContent = new Gson().toJson(enrollmentArgs);
+            final var client = getOkHttpClient();
+            final var body = RequestBody.create(requestBodyContent, MediaType.get("application/json; utf-8"));
+            final var request = new Request.Builder()
+                    .header("authorize", "bearer " + authToken)
+                    .header("Accept", "application/json; utf-8")
+                    .header("Content-Type", "application/json; utf-8")
+                    .url(enrollmentUrl)
+                    .post(body)
+                    .build();
+            final var response = client.newCall(request).execute();
 
-            final var base64EncodedCredentials = "Basic " + Base64.encodeToString((userName + ":" + password).getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
-            connection.setRequestProperty("Authorization", base64EncodedCredentials);
+            if (!response.isSuccessful())
+                return new HttpResponse<DocumentEnrolmentResponse>(response.code(), response.body().string());
 
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "application/json; utf-8");
-
-            connection.setRequestProperty("Accept", "application/json; utf-8");
-
-            try(final var requestWriter = new OutputStreamWriter(connection.getOutputStream()))
-            {
-                final var requestBody = new Gson().toJson(enrollmentArgs);
-                requestWriter.write(requestBody);
-                requestWriter.flush();
-            }
-            catch(Exception ex)
-            {
-                ex.printStackTrace();
-                return new DocumentAddResult(EnrollDocumentResult.Other);
-            }
-
-            try(final var responseReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8)))
-            {
-                final var result = new StringBuilder();
-                String buffer;
-                while ((buffer = responseReader.readLine()) != null)
-                {
-                    result.append(buffer); //TODO .trim()?
-                }
-                return new Gson().fromJson(result.toString(), DocumentAddResult.class);
-            }
+            final var obj = new Gson().fromJson(response.body().string(), DocumentEnrolmentResponse.class);
+            return new HttpResponse<DocumentEnrolmentResponse>(obj);
         }
-        catch(IOException ex)
+        catch(Exception ex)
         {
-            //TODO log
             ex.printStackTrace();
-            return new DocumentAddResult(EnrollDocumentResult.Other);
+            return new HttpResponse<DocumentEnrolmentResponse>(500, "Unexpected error.");
         }
     }
 
     //TODO async task
-    public MessageListResult GetMessages()
-    {
+    public HttpResponse<ReceivedMessageList> getMessages(final String authToken) throws IOException, NoSuchAlgorithmException, KeyManagementException {
         final StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        HttpURLConnection connection;
-        try
-        {
-            connection = (HttpURLConnection) new URL(messageListUrl).openConnection();
-            final var base64EncodedCredentials = "Basic " + Base64.encodeToString((userName + ":" + password).getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
-            connection.setRequestProperty("Authorization", base64EncodedCredentials);
+        final var client = getOkHttpClient();
+        final var request = new Request.Builder()
+                .header("authorize", "bearer " + authToken)
+                .header("Accept", "application/json; utf-8")
+                .url(messageListUrl)
+                .get()
+                .build();
 
-            connection.setRequestMethod("GET");
+        final var response = client.newCall(request).execute();
 
-            connection.setRequestProperty("Accept", "application/json; utf-8");
-        }
-        catch (ProtocolException e)
-        {
-            e.printStackTrace();
-            return messageListErrorResult;
-        } catch (MalformedURLException e)
-        {
-            e.printStackTrace();
-            return messageListErrorResult;
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-            return messageListErrorResult;
-        }
+        if (!response.isSuccessful())
+            return new HttpResponse<ReceivedMessageList>(response.code(), response.body().string());
 
-        try(var responseReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8)))
-        {
-            final var result = new StringBuilder();
-            String responseLine;
-            while ((responseLine = responseReader.readLine()) != null)
-            {
-                result.append(responseLine); //TODO .trim()?
-            }
-            return new Gson().fromJson(result.toString(), MessageListResult.class);
-        }
-        catch (IOException ex)
-        {
-            //TODO log
-            ex.printStackTrace();
-            return messageListErrorResult;
-        }
+        final var obj = new Gson().fromJson(response.body().string(), ReceivedMessageList.class);
+        return new HttpResponse<ReceivedMessageList>(obj);
+
     }
 
-
-
     //TODO async task
-    public MessageGetResult GetMessage(String itemUrl)
-    {
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+    public HttpResponse<ReceivedMessage> getMessage(String itemUrl, String authToken) throws IOException, NoSuchAlgorithmException, KeyManagementException {
+        final StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        HttpURLConnection connection;
-        try
-        {
-            connection = (HttpURLConnection) new URL(itemUrl).openConnection();
+        final var client = getOkHttpClient();
 
-            var base64EncodedCredentials = "Basic " + Base64.encodeToString((userName + ":" + password).getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
-            connection.setRequestProperty("Authorization", base64EncodedCredentials);
+        final var builder = new Request.Builder();
+        final var request = builder
+                .header("authorize", "bearer " + authToken)
+                .header("Accept", "application/json; utf-8")
+                .url(itemUrl)
+                .get()
+                .build();
 
-            connection.setRequestMethod("GET");
+        final var response = client.newCall(request).execute();
 
-            //connection.setRequestProperty("Accept", "application/json; utf-8");
-        }
-        catch (ProtocolException e)
-        {
-            e.printStackTrace();
-            return messageGetErrorResult;
-        } catch (MalformedURLException e)
-        {
-            e.printStackTrace();
-            return messageGetErrorResult;
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-            return messageGetErrorResult;
-        }
+        if (!response.isSuccessful())
+            return new HttpResponse<ReceivedMessage>(response.code(), response.body().string());
 
-        try(var responseReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8)))
-        {
-            var result = new StringBuilder();
-            String responseLine;
-            while ((responseLine = responseReader.readLine()) != null)
-            {
-                result.append(responseLine); //TODO .trim()?
-            }
+        final var obj = new Gson().fromJson(response.body().string(), ReceivedMessage.class);
+        return new HttpResponse<ReceivedMessage>(obj);
+    }
 
-            var jsonString = result.toString();
+    @NonNull
+    private OkHttpClient getOkHttpClient() throws NoSuchAlgorithmException, KeyManagementException
+    {
+        try {
+            final TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
 
-            var builder = new GsonBuilder();
-            //builder.registerTypeAdapter(byte[].class, (JsonSerializer<byte[]>) (src, typeOfSrc, context) -> new JsonPrimitive(Base64.getEncoder().encodeToString(src)));
-            builder.registerTypeAdapter(byte[].class, (JsonDeserializer<byte[]>) (json, typeOfT, context) -> Base64.decode(json.getAsString(), Base64.NO_WRAP));
-            return builder.create().fromJson(jsonString, MessageGetResult.class);
-        }
-        catch (Exception ex)
-        {
-            //TODO log
-            ex.printStackTrace();
-            return messageGetErrorResult;
+                        @Override
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain,
+                                                       String authType) throws
+                                CertificateException {
+                        }
+
+                        @Override
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain,
+                                                       String authType) throws
+                                CertificateException {
+                        }
+                        @Override
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new java.security.cert.X509Certificate[]{};
+                        }
+                    }
+            };
+
+            final SSLContext sslContext = SSLContext.getInstance(SSL);
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+
+            builder.hostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
+
+            return builder.build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

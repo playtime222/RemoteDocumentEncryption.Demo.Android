@@ -18,8 +18,6 @@ public class ShowMessageActivity extends AppCompatActivity
 
         final var message = (SimpleDecryptedMessage)getIntent().getExtras().getParcelable(ExtraTag);
 
-
-
         final var whenSentTextView = (TextView) findViewById(R.id.textViewWhenSent);
         final var textViewWhoFrom = (TextView) findViewById(R.id.textViewWhoFrom);
         final var textViewShortNote = (TextView) findViewById(R.id.textViewShortNote);

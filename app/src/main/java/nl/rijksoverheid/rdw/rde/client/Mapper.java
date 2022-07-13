@@ -1,6 +1,5 @@
 package nl.rijksoverheid.rdw.rde.client;
 
-import nl.rijksoverheid.rdw.rde.apdusimulator.*;
 import nl.rijksoverheid.rdw.rde.crypto.*;
 import nl.rijksoverheid.rdw.rde.documents.*;
 import nl.rijksoverheid.rdw.rde.remoteapi.*;
@@ -10,7 +9,7 @@ import nl.rijksoverheid.rdw.rde.mrtdfiles.*;
 
 public class Mapper
 {
-    public static MessageMetadata map(final MessageInfoDto value)
+    public static MessageMetadata map(final ReceivedMessageListItem value)
     {
         if (value == null)
             throw new IllegalArgumentException();

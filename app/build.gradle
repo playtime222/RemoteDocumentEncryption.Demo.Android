@@ -35,12 +35,25 @@ android {
 
 dependencies {
 
+    implementation 'com.journeyapps:zxing-android-embedded:4.2.0'
+    implementation('com.journeyapps:zxing-android-embedded:4.3.0') { transitive = false }
+    implementation 'com.google.zxing:core:3.3.0'
+
+    //General
+    implementation 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
     //MRTDs
     implementation 'net.sf.scuba:scuba-sc-android:0.0.23'
     implementation 'org.jmrtd:jmrtd:0.7.32'
 
+    //QR codes
+    //implementation 'me.dm7.barcodescanner:zxing:1.9.8'
+    //implementation 'com.google.zxing:core:3.3.0'
+
     //Web api
     implementation 'com.google.code.gson:gson:2.9.0'
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
 
     //Android...
     implementation 'androidx.appcompat:appcompat:1.4.1'

@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 public class EnrollmentActivity extends AppCompatActivity
 {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
-    //private EditText editTextEnrollmentId;
     private EditText editTextDocumentId;
     private EditText editTextDob;
     private EditText editTextDocDoe;
@@ -31,7 +30,6 @@ public class EnrollmentActivity extends AppCompatActivity
 
         final var clickButton = (Button) findViewById(R.id.buttonEnroll);
 
-        //editTextEnrollmentId = findViewById(R.id.editTextEnrollmentId);
         editTextDisplayName = findViewById(R.id.editTextDisplayName);
         editTextDocumentId = findViewById(R.id.editTextDocumentId);
         editTextDob = findViewById(R.id.editTextDob);

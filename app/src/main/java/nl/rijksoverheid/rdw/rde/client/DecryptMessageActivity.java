@@ -16,6 +16,7 @@ import android.provider.Settings;
 import net.sf.scuba.smartcards.CardServiceException;
 import net.sf.scuba.util.Hex;
 
+import org.bouncycastle.util.encoders.Base64;
 import org.jmrtd.BACKey;
 
 import java.io.IOException;
@@ -24,21 +25,20 @@ import java.security.GeneralSecurityException;
 
 import javax.crypto.spec.SecretKeySpec;
 
-import nl.rijksoverheid.rdw.rde.apdusimulator.*;
-import nl.rijksoverheid.rdw.rde.client.lib.RdeDocument;
+import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.crypto.*;
 import nl.rijksoverheid.rdw.rde.documents.*;
-import nl.rijksoverheid.rdw.rde.remoteapi.*;
 import nl.rijksoverheid.rdw.rde.messaging.*;
 import nl.rijksoverheid.rdw.rde.messaging.zipV2.*;
-import nl.rijksoverheid.rdw.rde.mrtdfiles.*;
 
 public class DecryptMessageActivity extends AppCompatActivity
 {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
     private String messageId;
+    private String authToken;
     public static final String ExtraTag = "DECRYPT_MESSAGE_URL";
+    public static final String ExtraTag2 = "CURRENT_AUTH_TOKEN";
 
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState)
@@ -51,6 +51,7 @@ public class DecryptMessageActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enrollment_read_document);
         messageId = getIntent().getStringExtra(ExtraTag);
+        authToken = getIntent().getStringExtra(ExtraTag2);
     }
 
     @Override
@@ -78,12 +79,12 @@ public class DecryptMessageActivity extends AppCompatActivity
 
         try
         {
-            final var getResult = new RdeServerProxy().GetMessage(messageId);
+            final var getResult = new RdeServerProxy().getMessage(messageId, authToken);
 
             if (getResult.isError())
                 return;
 
-            final var message = getResult.getContent();
+            final byte[] message = Base64.decode(getResult.getData().getContentBase64());
 
             var decoder = new ZipMessageDecoder();
 
@@ -117,15 +118,14 @@ public class DecryptMessageActivity extends AppCompatActivity
         {
             e.printStackTrace();
         }
-        catch (CardServiceException e)
+        catch (CardServiceException | GeneralRdeException e)
         {
             e.printStackTrace();
         }
     }
 
-    private static byte[] getApduResponseForDecryption(final BACKey bacKey, final Tag tag, final RdeSessionArgs mca) throws IOException, CardServiceException, GeneralSecurityException
-    {
-        try (final var doc = new RdeDocument())
+    private static byte[] getApduResponseForDecryption(final BACKey bacKey, final Tag tag, final RdeSessionArgs mca) throws IOException, CardServiceException, GeneralSecurityException, GeneralRdeException {
+        try (final var doc = new AndroidRdeDocument())
         {
             doc.open(tag, bacKey);
             return doc.getApduResponseForDecryption(mca);
