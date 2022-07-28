@@ -6,6 +6,8 @@ import com.google.zxing.integration.android.IntentIntegrator;
 
 import java.util.ArrayList;
 
+import nl.rijksoverheid.rdw.rde.client.activities.ScanApiTokenActivity;
+
 public class ScanApiTokenActivityOnClickListener implements View.OnClickListener {
     ScanApiTokenActivity activity;
 

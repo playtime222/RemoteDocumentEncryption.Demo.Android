@@ -1,6 +1,4 @@
-package nl.rijksoverheid.rdw.rde.client;
-
-import static nl.rijksoverheid.rdw.rde.client.ScanApiTokenActivity.API_TOKEN_EXTRA_TAG;
+package nl.rijksoverheid.rdw.rde.client.activities;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -18,13 +16,16 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
+import nl.rijksoverheid.rdw.rde.client.Mapper;
+import nl.rijksoverheid.rdw.rde.client.MessageMetadata;
+import nl.rijksoverheid.rdw.rde.client.R;
+import nl.rijksoverheid.rdw.rde.client.SimpleArrayAdapter;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.remoteapi.*;
 
 public class MessagesListActivity extends Activity implements AdapterView.OnItemClickListener
 {
-    private String authToken;
-
     /** Called when the activity is first created. */
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -32,37 +33,26 @@ public class MessagesListActivity extends Activity implements AdapterView.OnItem
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_messages);
 
-        final var bacKeyStorage = new BacKeyStorage();
-        bacKeyStorage.read(getIntent());
-
-
         final HttpResponse<ReceivedMessageList> messageListResult;
         try {
-            var authToken = getIntent().getStringExtra(ScanApiTokenActivity.API_TOKEN_EXTRA_TAG);
+            final var sp = new AppSharedPreferences(this);
+            final var authToken = sp.readApiToken();
             messageListResult = new RdeServerProxy().getMessages(authToken);
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
             e.printStackTrace();
             return;
         }
 
-//        var messageListResult = new MessageListResult();
-//        messageListResult.setItems(new MessageInfoDto[]{
-//                new MessageInfoDto(123, "2021-10-05 15:15", "Someone", "someone else", "unremarkable", "http://1"),
-//                new MessageInfoDto(124, "2021-10-06 15:15", "Someone else", "don't care", "notable", "http://2"),
-//        });
-
         final var refreshButton = (Button)findViewById(R.id.buttonRefresh);
         refreshButton.setOnClickListener(v -> {
-            //Just do it again
+                //Just do it again
                 var intent = new Intent(getApplicationContext(), MessagesListActivity.class);
                 startActivity(intent);
         });
 
         final ListView listView = findViewById(R.id.messageItems);
         listView.setOnItemClickListener(this);
-
         final var items = Arrays.stream(messageListResult.getData().getItems()).map(Mapper::map).toArray(MessageMetadata[]::new);
-
         final var adaptor = new SimpleArrayAdapter(listView.getContext(), items);
         listView.setAdapter(adaptor);
     }
@@ -88,9 +78,8 @@ public class MessagesListActivity extends Activity implements AdapterView.OnItem
             throw new IllegalArgumentException();
 
         final var itemAtPosition = adapter.getItemAtPosition(position);
-        final var url = ((MessageMetadata)itemAtPosition).getUrl();
         final var intent = new Intent(getApplicationContext(), DecryptMessageActivity.class);
-        intent.putExtra(DecryptMessageActivity.ExtraTag, url);
+        intent.putExtra(DecryptMessageActivity.DECRYPT_MESSAGE_ID, ((MessageMetadata)itemAtPosition).getId());
         MessagesListActivity.this.startActivity(intent);
     }
 }

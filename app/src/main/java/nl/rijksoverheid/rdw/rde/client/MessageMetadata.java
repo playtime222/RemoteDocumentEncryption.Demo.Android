@@ -7,17 +7,6 @@ public class MessageMetadata
     private String whoFrom;
     private String whenSent; //ISO sortable datetime
     private String shortNote;
-    private String url;
-
-    public String getUrl()
-    {
-        return url;
-    }
-
-    public void setUrl(final String url)
-    {
-        this.url = url;
-    }
 
     public MessageMetadata()
     {

@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
-        android:networkSecurityConfig="@xml/network_security_config"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -15,38 +14,47 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RDESample">
         <activity
-            android:name=".ScanApiTokenActivity"
+            android:name=".activities.ScanApiTokenActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true"
             android:label="@string/title_activity_scan_token"
-            android:theme="@style/Theme.RDESample.Fullscreen" >
+            android:theme="@style/Theme.RDESample.Fullscreen"/>
+        <activity
+            android:name=".activities.EnrollmentActivity"
+            android:exported="true"/>
+        <activity
+            android:name=".activities.EnrollmentReadDocumentActivity"
+            android:exported="true"/>
+        <activity
+            android:name=".activities.MessagesListActivity"
+            android:exported="true">
+        </activity>
+        <activity
+            android:name=".activities.DecryptMessageActivity"
+            android:exported="true" />
+        <activity
+            android:name=".activities.ShowMessageActivity"
+            android:exported="true" />
+        <activity
+            android:name=".activities.TestRdeDecryptionActivity"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".EnrollmentActivity"
-            android:exported="true">
+            android:name=".activities.TestRdeRoundTripActivity"
+            android:exported="true" >
         </activity>
         <activity
-            android:name=".EnrollmentReadDocumentActivity"
-            android:exported="true">
+            android:name=".activities.TestCrossPlatformDecryptionActivity"
+            android:exported="true" >
         </activity>
         <activity
-            android:name=".MessagesListActivity"
-            android:exported="true">
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
+            android:name=".activities.TestRdeEnrollmentActivity"
+            android:exported="true" >
         </activity>
-        <activity
-            android:name=".DecryptMessageActivity"
-            android:exported="true" />
-        <activity
-            android:name=".ShowMessageActivity"
-            android:exported="true" />
     </application>
 
 </manifest>

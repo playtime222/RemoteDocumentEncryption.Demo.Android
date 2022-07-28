@@ -56,5 +56,6 @@
     <string name="title_activity_scan_token">ScanToken</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_test_rde_session">TestRdeSessionActivity</string>
 
 </resources>

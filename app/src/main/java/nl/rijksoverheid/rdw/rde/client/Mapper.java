@@ -18,8 +18,8 @@ public class Mapper
         result.setId(value.getId());
         result.setShortNote(value.getNote());
         result.setWhenSent(value.getWhenSent());
-        result.setWhoFrom(value.getFrom());
-        result.setUrl(value.getUrl());
+        result.setWhoFrom(value.getSenderEmail());
+        //result.setDocumentDisplayName(value.getDocumentDisplayName());
         return result;
     }
 }

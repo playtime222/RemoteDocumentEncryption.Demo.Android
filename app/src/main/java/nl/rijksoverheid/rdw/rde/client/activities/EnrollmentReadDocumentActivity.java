@@ -1,6 +1,4 @@
-package nl.rijksoverheid.rdw.rde.client;
-
-import org.bouncycastle.util.encoders.Base64;
+package nl.rijksoverheid.rdw.rde.client.activities;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -22,10 +20,13 @@ import org.jmrtd.BACKey;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
+import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.documents.*;
-import nl.rijksoverheid.rdw.rde.remoteapi.*;
+import nl.rijksoverheid.rdw.rde.mapping.Mapper;
+import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
 public class EnrollmentReadDocumentActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
@@ -52,67 +53,68 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
             throw new IllegalArgumentException();
 
         super.onNewIntent(intent);
-        authToken = intent.getStringExtra(ScanApiTokenActivity.API_TOKEN_EXTRA_TAG);
+            final var sp = new AppSharedPreferences(this);
+            authToken = sp.readApiToken();
+            var stored = sp.readBacKey();
+            if (!stored.isComplete())
+                return;
 
-        if (!NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()))
-            return;
+            final var bacKey = stored.toBACKey();
 
-        final var bacKeyStorage = new BacKeyStorage();
-        bacKeyStorage.read(intent);
-        final var bacKey = bacKeyStorage.getValue();
-        Tag tag = intent.getExtras().getParcelable(NfcAdapter.EXTRA_TAG);
+            if (!NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()))
+                return;
 
-        if (tag == null)
-            return; //TODO failed
+            Tag tag = intent.getExtras().getParcelable(NfcAdapter.EXTRA_TAG);
 
-        try {
-//            try(var d = new RdeDocument())
-//            {
-//                d.open(tag, bacKey);
-//                d.doTestRbCall();
-//            }
+            if (tag == null)
+                return; //TODO failed
 
             try {
+
                 final var args = getEnrollmentArgs(tag, bacKey, new UserSelectedEnrollmentArgs(14, 8));
-                final var dto = new DocumentEnrolmentRequestArgs();
+                var displayName = intent.getStringExtra(EnrollmentReadDocumentActivity.DISPLAY_NAME_EXTRA_TAG);
+                if (displayName == null || displayName.isEmpty())
+                    displayName = "default";
 
-                dto.setDisplayName(displayName);
-                dto.setFileId(args.getShortFileId());
-                dto.setFileContentsBase64(Base64.toBase64String(args.getFileContents()));
-                dto.setReadLength(args.getFileReadLength());
-                dto.setDataGroup14Base64(Base64.toBase64String(args.getDataGroup14()));
+                args.setDisplayName(displayName);
 
-                //EndToEndTest.Test(bacKey, tag, args);
+            final var dto = Mapper.ToServiceArgs(args);
+            var result = new RdeServerProxy().enrol(dto, authToken);
 
-                var result = new RdeServerProxy().enrol(dto, authToken);
+            if (result.isError()) {
+                //TODO show and an error...
+                return;
+            }
 
-                if (result.isError()) {
-                    //TODO show and an error...
-                    return;
-                }
+            final var nextIntent = new Intent(getApplicationContext(), MessagesListActivity.class);
+            startActivity(nextIntent);
 
-                final var nextIntent = new Intent(getApplicationContext(), MessagesListActivity.class);
-
-                bacKeyStorage.write(PreferenceManager.getDefaultSharedPreferences(this));
-                startActivity(nextIntent);
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (GeneralRdeException e) {
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (GeneralRdeException e) {
+            e.printStackTrace();
+        } catch (CardServiceException e) {
                 e.printStackTrace();
             }
-        } finally {
-            //TODO Why was this forced?
-        }
     }
+
 
     private RdeDocumentEnrollmentInfo getEnrollmentArgs(final Tag tag, final BACKey bacKey,
                                                         final UserSelectedEnrollmentArgs args)
-            throws GeneralSecurityException, IOException, GeneralRdeException {
+            throws GeneralSecurityException, IOException, GeneralRdeException, CardServiceException {
+
+        byte[] dg14content;
         try (final var doc = new AndroidRdeDocument()) {
             doc.open(tag, bacKey);
-            return doc.getEnrollmentArgs(args);
+            dg14content = doc.getFileContent(14);
+        }
+
+        //var dg14 = new Dg14Reader(dg14content);
+        try (final var doc = new AndroidRdeDocument()) {
+            doc.open(tag, bacKey);
+            return doc.getEnrollmentArgs(args, dg14content);
         } catch (CardServiceException ex) {
             ex.printStackTrace();
             throw new GeneralRdeException(ex);

@@ -1,9 +1,9 @@
-package nl.rijksoverheid.rdw.rde.client;
+package nl.rijksoverheid.rdw.rde.client.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -11,18 +11,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 
-import java.util.ArrayList;
-import java.util.List;
+import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
+import nl.rijksoverheid.rdw.rde.client.R;
+import nl.rijksoverheid.rdw.rde.client.ScanApiTokenActivityOnClickListener;
 
 
 public class ScanApiTokenActivity extends AppCompatActivity {
-        public static final String API_TOKEN_EXTRA_TAG = "ApiToken";
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_scan_token);
-            final TextView textView = findViewById(R.id.textView);
+            //final TextView textView = findViewById(R.id.textView);
             final ImageButton qrButton = findViewById(R.id.qr_button);
             qrButton.setOnClickListener(new ScanApiTokenActivityOnClickListener(this));
         }
@@ -30,15 +30,15 @@ public class ScanApiTokenActivity extends AppCompatActivity {
         @Override
         public void onActivityResult(int requestCode, int resultCode, Intent data)
         {
-
             super.onActivityResult(requestCode, resultCode, data);
             var result = IntentIntegrator.parseActivityResult(resultCode, data);
             if (result != null)
             {
-                //var token = parseResult(result.getContents());
-                var token = result.getContents();
-                final var intent = new Intent(getApplicationContext(), MessagesListActivity.class);
-                intent.putExtra(API_TOKEN_EXTRA_TAG, token);
+                final var token = result.getContents();
+                final var sp = new AppSharedPreferences(this);
+                sp.writeApiToken(token);
+
+                final var intent = new Intent(getApplicationContext(), EnrollmentActivity.class);
                 startActivity(intent);
             }
     }

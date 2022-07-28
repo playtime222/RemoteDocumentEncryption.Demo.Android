@@ -10,8 +10,6 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.*;
 
-import nl.rijksoverheid.rdw.rde.client.ScanApiTokenActivity;
-
 /**
  * Instrumented test, which will execute on an Android device.
  *

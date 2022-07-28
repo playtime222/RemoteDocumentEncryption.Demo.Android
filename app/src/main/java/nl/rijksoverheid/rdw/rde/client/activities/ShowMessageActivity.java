@@ -1,10 +1,13 @@
-package nl.rijksoverheid.rdw.rde.client;
+package nl.rijksoverheid.rdw.rde.client.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
+
+import nl.rijksoverheid.rdw.rde.client.R;
+import nl.rijksoverheid.rdw.rde.client.SimpleDecryptedMessage;
 
 public class ShowMessageActivity extends AppCompatActivity
 {

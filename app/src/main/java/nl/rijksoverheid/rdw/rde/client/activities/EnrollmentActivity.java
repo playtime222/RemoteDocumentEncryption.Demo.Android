@@ -1,4 +1,4 @@
-package nl.rijksoverheid.rdw.rde.client;
+package nl.rijksoverheid.rdw.rde.client.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,9 @@ import android.widget.EditText;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+
+import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
+import nl.rijksoverheid.rdw.rde.client.R;
 
 public class EnrollmentActivity extends AppCompatActivity
 {
@@ -35,16 +38,22 @@ public class EnrollmentActivity extends AppCompatActivity
         editTextDob = findViewById(R.id.editTextDob);
         editTextDocDoe = findViewById(R.id.editTextDocDoe);
 
+        final var intent = new Intent(getApplicationContext(), EnrollmentReadDocumentActivity.class);
+
+        final var storedBacKey = new AppSharedPreferences(this).readBacKey();
+
+        editTextDocumentId.setText(storedBacKey.DocId);
+        editTextDob.setText(storedBacKey.Dob);
+        editTextDocDoe.setText(storedBacKey.Expiry);
+
         clickButton.setOnClickListener(v ->
         {
-            final var intent = new Intent(getApplicationContext(), EnrollmentReadDocumentActivity.class);
-            final var bacKeyStorage = new BacKeyStorage();
-            bacKeyStorage.setValue(
-                editTextDocumentId.getText().toString(),
-                editTextDob.getText().toString(),
-                editTextDocDoe.getText().toString()
-            );
-            bacKeyStorage.write(intent);
+            storedBacKey.DocId = editTextDocumentId.getText().toString();
+            storedBacKey.DocId = editTextDob.getText().toString();
+            storedBacKey.DocId = editTextDocDoe.getText().toString();
+
+            if (storedBacKey.isComplete())
+                new AppSharedPreferences(this).write(storedBacKey.toBACKey());
 
             intent.putExtra(EnrollmentReadDocumentActivity.DISPLAY_NAME_EXTRA_TAG, editTextDisplayName.getText().toString());
 

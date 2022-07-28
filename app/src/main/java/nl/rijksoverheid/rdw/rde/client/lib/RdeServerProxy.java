@@ -40,9 +40,10 @@ import okhttp3.RequestBody;
 public class RdeServerProxy
 {
     //TODO inject settings/providers and use an identity/discovery endpoint on the server
-    private static final String enrollmentUrl = "https://192.168.178.12:45455/api/mobiledevices/document";
+    private static final String enrollmentUrl = "https://192.168.178.12:45455/api/mobiledevices/documents";
     //Urls in the list should are fully qualified.
     private static final String messageListUrl = "https://192.168.178.12:45455/api/mobiledevices/messages/received";
+    private static final String messageUrl = "https://192.168.178.12:45455/api/mobiledevices/messages/received/";
 
     public RdeServerProxy()
     {
@@ -61,14 +62,15 @@ public class RdeServerProxy
         try {
             final var requestBodyContent = new Gson().toJson(enrollmentArgs);
             final var client = getOkHttpClient();
-            final var body = RequestBody.create(requestBodyContent, MediaType.get("application/json; utf-8"));
+            final var body = RequestBody.create(requestBodyContent, MediaType.get("application/json"));
             final var request = new Request.Builder()
                     .header("authorize", "bearer " + authToken)
-                    .header("Accept", "application/json; utf-8")
-                    .header("Content-Type", "application/json; utf-8")
+                    //.header("Accept", "application/json")
+
                     .url(enrollmentUrl)
                     .post(body)
                     .build();
+
             final var response = client.newCall(request).execute();
 
             if (!response.isSuccessful())
@@ -108,7 +110,7 @@ public class RdeServerProxy
     }
 
     //TODO async task
-    public HttpResponse<ReceivedMessage> getMessage(String itemUrl, String authToken) throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    public HttpResponse<ReceivedMessage> getMessage(String messageId, String authToken) throws IOException, NoSuchAlgorithmException, KeyManagementException {
         final StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
@@ -118,7 +120,7 @@ public class RdeServerProxy
         final var request = builder
                 .header("authorize", "bearer " + authToken)
                 .header("Accept", "application/json; utf-8")
-                .url(itemUrl)
+                .url(messageUrl+ messageId)
                 .get()
                 .build();
 
@@ -131,6 +133,8 @@ public class RdeServerProxy
         return new HttpResponse<ReceivedMessage>(obj);
     }
 
+
+    //TODO bean such that this is only debug mode, not production
     @NonNull
     private OkHttpClient getOkHttpClient() throws NoSuchAlgorithmException, KeyManagementException
     {

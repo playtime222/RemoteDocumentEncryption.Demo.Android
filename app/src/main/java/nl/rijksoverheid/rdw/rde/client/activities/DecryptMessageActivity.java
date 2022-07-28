@@ -1,4 +1,4 @@
-package nl.rijksoverheid.rdw.rde.client;
+package nl.rijksoverheid.rdw.rde.client.activities;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -25,20 +25,22 @@ import java.security.GeneralSecurityException;
 
 import javax.crypto.spec.SecretKeySpec;
 
+import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
+import nl.rijksoverheid.rdw.rde.client.R;
+import nl.rijksoverheid.rdw.rde.client.SimpleDecryptedMessage;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.crypto.*;
 import nl.rijksoverheid.rdw.rde.documents.*;
 import nl.rijksoverheid.rdw.rde.messaging.*;
 import nl.rijksoverheid.rdw.rde.messaging.zipV2.*;
+import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
 public class DecryptMessageActivity extends AppCompatActivity
 {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
-    private String messageId;
-    private String authToken;
-    public static final String ExtraTag = "DECRYPT_MESSAGE_URL";
-    public static final String ExtraTag2 = "CURRENT_AUTH_TOKEN";
+    private long messageId;
+    public static final String DECRYPT_MESSAGE_ID = "DECRYPT_MESSAGE_URL";
 
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState)
@@ -50,8 +52,7 @@ public class DecryptMessageActivity extends AppCompatActivity
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enrollment_read_document);
-        messageId = getIntent().getStringExtra(ExtraTag);
-        authToken = getIntent().getStringExtra(ExtraTag2);
+        messageId = getIntent().getLongExtra(DECRYPT_MESSAGE_ID, -1);
     }
 
     @Override
@@ -62,15 +63,19 @@ public class DecryptMessageActivity extends AppCompatActivity
 
         super.onNewIntent(intent);
 
-        if (messageId == null)
+        messageId = getIntent().getLongExtra(DECRYPT_MESSAGE_ID, -1);
+
+        if (messageId == -1)
             return;
 
         if (!NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()))
             return;
 
-        final var bacKeyStorage = new BacKeyStorage();
-        bacKeyStorage.read(PreferenceManager.getDefaultSharedPreferences(this));
-        final var bacKey = bacKeyStorage.getValue();
+        final var storedBacKey = new AppSharedPreferences(this).readBacKey();
+        if (!storedBacKey.isComplete())
+            return;
+
+        final var bacKey = storedBacKey.toBACKey();
 
         final Tag tag = intent.getExtras().getParcelable(NfcAdapter.EXTRA_TAG);
 
@@ -79,7 +84,10 @@ public class DecryptMessageActivity extends AppCompatActivity
 
         try
         {
-            final var getResult = new RdeServerProxy().getMessage(messageId, authToken);
+            var sp = new AppSharedPreferences(this);
+            final var authToken = sp.readApiToken();
+
+            final var getResult = new RdeServerProxy().getMessage(""+messageId, authToken);
 
             if (getResult.isError())
                 return;
@@ -94,7 +102,6 @@ public class DecryptMessageActivity extends AppCompatActivity
             System.out.println("RESPONSE  :" + Hex.toHexString(response));
             final var key = new RbResponseToSecretKeyConverter().convert(response);
             System.out.println("SECRET KEY:" + Hex.toHexString(key));
-            //System.out.println("CONTENT   :" + Hex.toHexString(content));
             final var theKey = new SecretKeySpec(key, "AES");
             final var decryptedMessage = decoder.decode(theKey);
 
@@ -118,17 +125,28 @@ public class DecryptMessageActivity extends AppCompatActivity
         {
             e.printStackTrace();
         }
-        catch (CardServiceException | GeneralRdeException e)
+        catch (CardServiceException e)
+        {
+            e.printStackTrace();
+        }
+        catch (GeneralRdeException e)
         {
             e.printStackTrace();
         }
     }
 
-    private static byte[] getApduResponseForDecryption(final BACKey bacKey, final Tag tag, final RdeSessionArgs mca) throws IOException, CardServiceException, GeneralSecurityException, GeneralRdeException {
+    private static byte[] getApduResponseForDecryption(final BACKey bacKey, final Tag tag, final MessageCipherInfo mca) throws IOException, CardServiceException, GeneralSecurityException, GeneralRdeException {
+
+        byte[] dg14content;
+        try (final var doc = new AndroidRdeDocument()) {
+            doc.open(tag, bacKey);
+            dg14content = doc.getFileContent(14);
+        }
+
         try (final var doc = new AndroidRdeDocument())
         {
             doc.open(tag, bacKey);
-            return doc.getApduResponseForDecryption(mca);
+            return doc.getApduResponseForDecryption(mca, dg14content);
         }
     }
 
@@ -162,9 +180,8 @@ public class DecryptMessageActivity extends AppCompatActivity
             return;
         }
 
-        messageId = getIntent().getStringExtra(ExtraTag);
-
-        var intent = new Intent(getApplicationContext(), nl.rijksoverheid.rdw.rde.client.DecryptMessageActivity.class);
+        messageId = getIntent().getLongExtra(DECRYPT_MESSAGE_ID,-1);
+        var intent = new Intent(getApplicationContext(), DecryptMessageActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         var pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, new String[][]{new String[]{"android.nfc.tech.IsoDep"}});
