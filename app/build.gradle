@@ -41,6 +41,7 @@ dependencies {
 
     //General
     implementation 'org.projectlombok:lombok:1.18.22'
+    implementation files('lib\\rde-lib-1.0-SNAPSHOT.jar')
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
     //MRTDs
@@ -68,7 +69,8 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
 
-    implementation fileTree(dir: '..\\..\\rde-lib\\build\\libs', include: '*.jar')
+    //implementation fileTree(dir: '..\\..\\rde-lib\\build\\libs', include: '*.jar')
+    implementation files("lib/rde-lib-1.0-SNAPSHOT.jar")
 
     testImplementation 'junit:junit:4.13.2'
 

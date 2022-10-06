@@ -9,12 +9,11 @@ import net.sf.scuba.smartcards.CommandAPDU;
 import net.sf.scuba.smartcards.ISO7816;
 import net.sf.scuba.util.Hex;
 
+import nl.rijksoverheid.rdw.rde.casessionutilities.RdeMessageParameters;
 import nl.rijksoverheid.rdw.rde.client.SecureWrapperDebug;
-import nl.rijksoverheid.rdw.rde.documents.GeneralRdeException;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentConfig;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentEnrollmentInfo;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
-import nl.rijksoverheid.rdw.rde.messaging.debugonly.RdeMessageDebugInfo;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.RdeDocumentContentAuthentication;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -69,7 +68,13 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         isoDep = IsoDep.get(tag);
         isoDep.setTimeout(100000); //Long cos debugging
         cardService = CardService.getInstance(isoDep);
-        passportService = new PassportService(cardService, RdeDocumentConfig.TRANCEIVE_LENGTH_FOR_SECURE_MESSAGING, RdeDocumentConfig.MAX_BLOCK_SIZE, true, true);
+        try {
+            passportService = new PassportService(cardService, RdeDocumentConfig.TRANCEIVE_LENGTH_FOR_SECURE_MESSAGING, RdeDocumentConfig.MAX_BLOCK_SIZE, true, true);
+        } catch (Exception ex)
+        {
+            System.out.println(ex);
+        }
+
         passportService.open();
         passportService.sendSelectApplet(false);
         passportService.doBAC(bacKey);
@@ -92,7 +97,7 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
     //TODO allow user to select a different dg as Fid/cont
     //@Override
     public RdeDocumentEnrollmentInfo getEnrollmentArgs(final UserSelectedEnrollmentArgs args, byte[] dg14Content)
-            throws GeneralSecurityException, IOException, GeneralRdeException {
+            throws GeneralSecurityException, IOException, CardServiceException {
         if (args == null)
             throw new IllegalArgumentException();
 
@@ -119,7 +124,7 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         catch (CardServiceException e)
         {
             e.printStackTrace();
-            throw new GeneralRdeException(e);
+            throw e;
         }
     }
 
@@ -190,22 +195,22 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
 
     //@Override
     public byte[] getApduResponseForDecryption(MessageCipherInfo mca, byte[] dg14Content)
-            throws GeneralSecurityException, GeneralRdeException, IOException {
+            throws GeneralSecurityException, IOException, CardServiceException {
 
         final var dg14 = new Dg14Reader(dg14Content);
         final var caProtocolOid = dg14.getCaSessionInfo().getCaInfo().getObjectIdentifier();
         final var keyAgreementAlgorithm = ChipAuthenticationInfo.toKeyAgreementAlgorithm(caProtocolOid);
-        final var pcdPublicKey = getPublicKey(keyAgreementAlgorithm, org.bouncycastle.util.encoders.Hex.decode(mca.getRdeInfo().getPcdPublicKey()));
-        final var encryptedCommand = org.bouncycastle.util.encoders.Hex.decode(mca.getRdeInfo().getCommand());
+        final var pcdPublicKey = getPublicKey(keyAgreementAlgorithm, org.bouncycastle.util.encoders.Hex.decode(mca.getRdeMessageDecryptionInfo().getPcdPublicKey()));
+        final var encryptedCommand = org.bouncycastle.util.encoders.Hex.decode(mca.getRdeMessageDecryptionInfo().getCommand());
 
         System.out.println("DECRYPT PUB KEY      : " + pcdPublicKey);
-        System.out.println("DECRYPT CHALLENGE    : " + encryptedCommand.length + " bytes " + mca.getRdeInfo().getCommand());
+        System.out.println("DECRYPT CHALLENGE    : " + encryptedCommand.length + " bytes " + mca.getRdeMessageDecryptionInfo().getCommand());
 
         try {
             EACCAProtocol.sendPublicKey(new EACCAAPDUSender(cardService), passportService.getWrapper(), caProtocolOid, null, pcdPublicKey);
         } catch (CardServiceException e) {
             e.printStackTrace();
-            throw new GeneralRdeException(e);
+            throw e;
         }
 
         byte[] response;
@@ -214,7 +219,7 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
             response = cardService.transmit(command).getBytes();
         } catch (CardServiceException e) {
             e.printStackTrace();
-            throw new GeneralRdeException(e);
+            throw e;
         }
 
         System.out.println("DECRYPT RESPONSE     : " + response.length + " bytes, " + Hex.toHexString(response));
@@ -240,10 +245,6 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
 
         var result = new RdeMessageParameters();
         result.setEphemeralPublicKey(session.getPCDPublicKey().getEncoded());
-        result.setDebugInfo(new RdeMessageDebugInfo());
-        result.getDebugInfo().getCaWrapperDebugInfo().setCipher(session.getWrapper().getEncryptionKey().getAlgorithm());
-        result.getDebugInfo().getCaWrapperDebugInfo().setKsEnc(Hex.toHexString(session.getWrapper().getEncryptionKey().getEncoded()));
-        result.getDebugInfo().getCaWrapperDebugInfo().setKsMac(Hex.toHexString(session.getWrapper().getMACKey().getEncoded()));
 
         System.out.println("CA SESSION >>>>");
         System.out.println("PCD Pri Key: " +  session.getPCDPrivateKey().getAlgorithm() + " " + Hex.toHexString(session.getPCDPrivateKey().getEncoded()));
@@ -254,12 +255,16 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         SecureWrapperDebug.dump(session.getWrapper());
 
         var command = createRbCommandAPDU(shortFieldId, readLength);
+
+        System.out.println("File :"+ shortFieldId + " " + Hex.toHexString(new byte[] {(byte)shortFieldId}));
+        System.out.println("Length :"+ readLength + " " + readLength);
         System.out.println("CommandApdu :"+ Hex.toHexString(command.getBytes()));
         var wrappedCommand = passportService.getWrapper().wrap(command);
         result.setWrappedCommand(wrappedCommand.getBytes());
         System.out.println("Wrapped CommandApdu :"+ Hex.toHexString(wrappedCommand.getBytes()));
 
         var response = cardService.transmit(wrappedCommand);
+        System.out.println("RESPONSE DATA (wrapped):   " + response.getData().length + " bytes, " + Hex.toHexString(response.getData()));
         System.out.println("RESPONSE (wrapped):   " + response.getBytes().length + " bytes, " + Hex.toHexString(response.getBytes()));
         result.setWrappedResponse(response.getBytes());
         SecureWrapperDebug.dump(session.getWrapper());
@@ -268,8 +273,6 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         System.out.println("RESPONSE (unwrapped): " + unwrappedResponse.getBytes().length + " bytes, " + Hex.toHexString(unwrappedResponse.getBytes()));
 
         SecureWrapperDebug.dump(session.getWrapper());
-
-        result.getDebugInfo().setReadBinaryResponseHex(Hex.toHexString(unwrappedResponse.getBytes()));
 
         return result;
     }

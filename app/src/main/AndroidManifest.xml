@@ -18,17 +18,22 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true"
             android:label="@string/title_activity_scan_token"
-            android:theme="@style/Theme.RDESample.Fullscreen"/>
+            android:theme="@style/Theme.RDESample.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".activities.EnrollmentActivity"
             android:exported="true"/>
         <activity
             android:name=".activities.EnrollmentReadDocumentActivity"
             android:exported="true"/>
-        <activity
-            android:name=".activities.MessagesListActivity"
-            android:exported="true">
-        </activity>
+<!--        <activity-->
+<!--            android:name=".activities.MessagesListActivity"-->
+<!--            android:exported="true">-->
+<!--        </activity>-->
         <activity
             android:name=".activities.DecryptMessageActivity"
             android:exported="true" />
@@ -53,6 +58,10 @@
         </activity>
         <activity
             android:name=".activities.TestRdeEnrollmentActivity"
+            android:exported="true" >
+        </activity>
+        <activity
+            android:name=".activities.TestCaSessionActivity"
             android:exported="true" >
         </activity>
     </application>

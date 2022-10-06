@@ -23,7 +23,6 @@ import java.security.GeneralSecurityException;
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
-import nl.rijksoverheid.rdw.rde.documents.GeneralRdeException;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
 import nl.rijksoverheid.rdw.rde.messaging.MessageCipherInfo;
 import nl.rijksoverheid.rdw.rde.messaging.RdeMessageDecryptionInfo;
@@ -72,16 +71,15 @@ public class TestRdeEnrollmentActivity extends AppCompatActivity
         byte[] dg14content;
         try
         {
+            var userArgs = new UserSelectedEnrollmentArgs();
+            userArgs.setShortFileId(2);
+            userArgs.setFileByteCount(10);
+            userArgs.setDisplayName("The Enrollment Test Activity");
             try (final var doc = new AndroidRdeDocument()) {
                 doc.open(tag, SPEC2014BacKey);
                 dg14content = doc.getFileContent(14);
+                var result = doc.getEnrollmentArgs(userArgs, dg14content);
             }
-
-            try (final var doc = new AndroidRdeDocument()) {
-                doc.open(tag, SPEC2014BacKey);
-                doc.doTestRbCall(new Dg14Reader(dg14content), 14, 255);
-            }
-
         }
         catch (GeneralSecurityException e)
         {

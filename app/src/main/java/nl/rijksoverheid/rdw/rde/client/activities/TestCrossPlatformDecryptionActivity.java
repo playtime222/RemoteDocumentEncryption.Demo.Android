@@ -23,7 +23,6 @@ import java.security.GeneralSecurityException;
 
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
-import nl.rijksoverheid.rdw.rde.documents.GeneralRdeException;
 import nl.rijksoverheid.rdw.rde.messaging.MessageCipherInfo;
 import nl.rijksoverheid.rdw.rde.messaging.RdeMessageDecryptionInfo;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
@@ -137,12 +136,10 @@ public class TestCrossPlatformDecryptionActivity extends AppCompatActivity {
             e.printStackTrace();
         } catch (CardServiceException e) {
             e.printStackTrace();
-        } catch (GeneralRdeException e) {
-            e.printStackTrace();
         }
     }
 
-    private static byte[] getApduResponseForDecryption(final BACKey bacKey, final Tag tag, final MessageCipherInfo mca) throws IOException, CardServiceException, GeneralSecurityException, GeneralRdeException {
+    private static byte[] getApduResponseForDecryption(final BACKey bacKey, final Tag tag, final MessageCipherInfo mca) throws IOException, CardServiceException, GeneralSecurityException {
         byte[] dg14content;
         try (final var doc = new AndroidRdeDocument()) {
             doc.open(tag, bacKey);

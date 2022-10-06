@@ -20,17 +20,19 @@ import org.jmrtd.BACKey;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import nl.rijksoverheid.rdw.rde.casessionutilities.RdeMessageParameters;
+import nl.rijksoverheid.rdw.rde.casessionutilities.CaSessionArgs;
+import nl.rijksoverheid.rdw.rde.casessionutilities.ChipAuthenticationPublicKeyInfo;
+import nl.rijksoverheid.rdw.rde.casessionutilities.CreateRdeMessageParametersCommand;
+import nl.rijksoverheid.rdw.rde.casessionutilities.RdeMessageCreateArgs;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentEnrollmentInfo;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
 import nl.rijksoverheid.rdw.rde.messaging.MessageCipherInfo;
 import nl.rijksoverheid.rdw.rde.messaging.RdeMessageDecryptionInfo;
-//import nl.rijksoverheid.rdw.rde.messaging.RdeMessageParameters;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
-public class TestRdeRoundTripActivity extends AppCompatActivity
+public class TestCaSessionActivity extends AppCompatActivity
 {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
 
@@ -71,6 +73,7 @@ public class TestRdeRoundTripActivity extends AppCompatActivity
         var length = 100;
         try
         {
+            //Requires recipients MRTD
             byte[] dg14content;
             try (final var doc = new AndroidRdeDocument()) {
                 doc.open(tag, SPEC2014BacKey);
@@ -80,30 +83,46 @@ public class TestRdeRoundTripActivity extends AppCompatActivity
 
             System.out.println("DG14 : " +Hex.toHexString(dg14content));
 
-            final var args = new UserSelectedEnrollmentArgs(file, length);
+            final var userSelectedEnrollmentArgs = new UserSelectedEnrollmentArgs(file, length);
 
-            RdeMessageParameters rbResult;
+            //Requires recipients MRTD
+            RdeDocumentEnrollmentInfo rdeDocumentEnrollmentInfo;
             try (final var doc = new AndroidRdeDocument()) {
                 doc.open(tag, SPEC2014BacKey);
-                rbResult = doc.doTestRbCall(new Dg14Reader(dg14content), args.getShortFileId(), args.getFileByteCount());
+                rdeDocumentEnrollmentInfo = doc.getEnrollmentArgs(userSelectedEnrollmentArgs, dg14content);
             }
 
-            System.out.println("Wrapped DG" + file + " response: " + Hex.toHexString(rbResult.getWrappedResponse()));
+            var dg14 = new Dg14Reader(dg14content);
+            //Todo add getCaSessionArgs() to the DG14 Dg14Reader
+            var caSessionArgs = new CaSessionArgs();
+            caSessionArgs.setProtocolOid(dg14.getCaSessionInfo().getCaInfo().getObjectIdentifier());
+            var publicKeyInfo = new ChipAuthenticationPublicKeyInfo();
+            publicKeyInfo.setPublicKey(dg14.getCaSessionInfo().getCaPublicKeyInfo().getSubjectPublicKey().getEncoded());
+            caSessionArgs.setPublicKeyInfo(publicKeyInfo);
 
-            //TODO pcd pub key and from send message
+            var rdeMessageCreateArgs = new RdeMessageCreateArgs();
+            rdeMessageCreateArgs.setCaSessionArgs(caSessionArgs); //From DG14
+            rdeMessageCreateArgs.setFileContent(rdeDocumentEnrollmentInfo.getFileContents());
+            rdeMessageCreateArgs.setFileShortId(rdeDocumentEnrollmentInfo.getShortFileId());
+            rdeMessageCreateArgs.setReadLength(rdeDocumentEnrollmentInfo.getFileReadLength());
+
+            //DOES NOT require MRTD - should be executed on message sender's device (phone, browser etc.)
+            var rdeMessageParameters = new CreateRdeMessageParametersCommand().execute(rdeMessageCreateArgs);
             var mci = new MessageCipherInfo();
             var rdeInfo = new RdeMessageDecryptionInfo();
-            rdeInfo.setPcdPublicKey(Hex.toHexString(rbResult.getEphemeralPublicKey()));
-            rdeInfo.setCommand(Hex.toHexString(rbResult.getWrappedCommand()));
+            rdeInfo.setPcdPublicKey(Hex.toHexString(rdeMessageParameters.getEphemeralPublicKey()));
+            rdeInfo.setCommand(Hex.toHexString(rdeMessageParameters.getWrappedCommand()));
             mci.setRdeInfo(rdeInfo);
 
+            //Requires recipients MRTD
             byte[] decryptRbResponse;
             try (final var doc = new AndroidRdeDocument()) {
                 doc.open(tag, SPEC2014BacKey);
                 decryptRbResponse = doc.getApduResponseForDecryption(mci, dg14content);
             }
+
             var decryptRbResponseHex = Hex.toHexString(decryptRbResponse);
-            var rbResultHex = Hex.toHexString(rbResult.getWrappedResponse());
+            var rbResultHex = Hex.toHexString(rdeMessageParameters.getWrappedResponse());
 
             System.out.println("Encrypt Response: " + rbResultHex);
             System.out.println("Decrypt Response: " + decryptRbResponseHex);
@@ -143,7 +162,7 @@ public class TestRdeRoundTripActivity extends AppCompatActivity
             return;
         }
 
-        var intent = new Intent(getApplicationContext(), TestRdeRoundTripActivity.class);
+        var intent = new Intent(getApplicationContext(), TestCaSessionActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         var pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, new String[][]{new String[]{"android.nfc.tech.IsoDep"}});
