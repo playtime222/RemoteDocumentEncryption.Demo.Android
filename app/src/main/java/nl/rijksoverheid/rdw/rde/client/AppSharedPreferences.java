@@ -4,7 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.google.gson.Gson;
+
 import org.jmrtd.BACKey;
+
+import nl.rijksoverheid.rdw.rde.client.lib.ServicesToken;
 
 public class AppSharedPreferences {
 
@@ -19,9 +23,10 @@ public class AppSharedPreferences {
         sp = activity.getSharedPreferences(Id, Activity.MODE_PRIVATE);
     }
 
-    public String readApiToken()
+    public ServicesToken readApiToken()
     {
-        return sp.getString(API_TOKEN, "Not a token...");
+        var token = sp.getString(API_TOKEN, "Not a token...");
+        return new Gson().fromJson(token, ServicesToken.class);
     }
 
     public void writeDocumentDisplayName(String value)

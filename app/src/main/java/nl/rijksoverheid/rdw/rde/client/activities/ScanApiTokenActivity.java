@@ -9,11 +9,13 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.gson.Gson;
 import com.google.zxing.integration.android.IntentIntegrator;
 
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.ScanApiTokenActivityOnClickListener;
+import nl.rijksoverheid.rdw.rde.client.lib.ServicesToken;
 
 
 public class ScanApiTokenActivity extends AppCompatActivity {

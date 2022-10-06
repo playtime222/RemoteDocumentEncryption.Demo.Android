@@ -41,7 +41,7 @@ dependencies {
 
     //General
     implementation 'org.projectlombok:lombok:1.18.22'
-    implementation files('lib\\rde-lib-1.0-SNAPSHOT.jar')
+
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
     //MRTDs
@@ -51,6 +51,9 @@ dependencies {
     //QR codes
     //implementation 'me.dm7.barcodescanner:zxing:1.9.8'
     //implementation 'com.google.zxing:core:3.3.0'
+
+    //RDE Support
+    implementation files('lib\\rde-lib-1.0-SNAPSHOT.jar')
 
     //Web api
     implementation 'com.google.code.gson:gson:2.9.0'
@@ -69,8 +72,6 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
 
-    //implementation fileTree(dir: '..\\..\\rde-lib\\build\\libs', include: '*.jar')
-    implementation files("lib/rde-lib-1.0-SNAPSHOT.jar")
 
     testImplementation 'junit:junit:4.13.2'
 
