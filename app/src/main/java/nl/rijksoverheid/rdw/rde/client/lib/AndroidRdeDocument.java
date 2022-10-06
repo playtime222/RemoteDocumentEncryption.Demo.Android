@@ -18,8 +18,11 @@ import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.RdeDocumentContentAuthentication;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jmrtd.BACKey;
+import org.jmrtd.PACEKeySpec;
 import org.jmrtd.PassportService;
+import org.jmrtd.lds.CardAccessFile;
 import org.jmrtd.lds.ChipAuthenticationInfo;
+import org.jmrtd.lds.PACEInfo;
 import org.jmrtd.lds.SODFile;
 import org.jmrtd.protocol.EACCAAPDUSender;
 import org.jmrtd.protocol.EACCAProtocol;
@@ -33,6 +36,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Optional;
 
 import nl.rijksoverheid.rdw.rde.messaging.*;
 
@@ -45,8 +49,6 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
 
     private final RdeDocumentContentAuthentication authenticator = new RdeDocumentContentAuthentication();
     private SODFile sodFile;
-//    private Dg14Reader dg14Reader;
-//    private byte[] dg14Content;
 
     private int toFileIdentifier(int shortFileIdentifier) {
         if (1 > shortFileIdentifier || shortFileIdentifier > 14)
@@ -56,7 +58,7 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
     }
 
     public void open(Tag tag, BACKey bacKey)
-            throws CardServiceException {
+            throws CardServiceException, GeneralSecurityException, IOException {
         if (tag == null)
             throw new IllegalArgumentException();
         if (bacKey == null)
@@ -68,22 +70,68 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         isoDep = IsoDep.get(tag);
         isoDep.setTimeout(100000); //Long cos debugging
         cardService = CardService.getInstance(isoDep);
-        try {
-            passportService = new PassportService(cardService, RdeDocumentConfig.TRANCEIVE_LENGTH_FOR_SECURE_MESSAGING, RdeDocumentConfig.MAX_BLOCK_SIZE, true, true);
-        } catch (Exception ex)
-        {
-            System.out.println(ex);
-        }
-
+        passportService = new PassportService(cardService, RdeDocumentConfig.TRANCEIVE_LENGTH_FOR_SECURE_MESSAGING, RdeDocumentConfig.MAX_BLOCK_SIZE, true, true);
         passportService.open();
         passportService.sendSelectApplet(false);
-        passportService.doBAC(bacKey);
+
+        if (doPace(bacKey))
+            return;
+
+        //else try BAC
+        try {
+            passportService.doBAC(bacKey);
+        }
+        catch (CardServiceException ex)
+        {
+            System.out.println("BAC failed.");
+            System.out.println(ex);
+            throw ex;
+        }
+    }
+
+    private boolean doPace(BACKey bacKey) throws IOException, GeneralSecurityException
+    {
+        try {
+            var paceInfo = findPaceSecurityInfo();
+            if (!paceInfo.isPresent())
+                return false;
+
+            //TODO use Card Authentication Number
+            final var p = paceInfo.get();
+            var paceKey = PACEKeySpec.createMRZKey(bacKey);
+            passportService.doPACE(paceKey, p.getObjectIdentifier(), PACEInfo.toParameterSpec(p.getParameterId()), p.getParameterId());
+            return true;
+        }
+        catch (CardServiceException ex) {
+                System.out.println("PACE failed.");
+                System.out.println(ex);
+                return false;
+        }
+    }
+
+    private Optional<PACEInfo> findPaceSecurityInfo() throws IOException
+    {
+        try(final var stream = passportService.getInputStream(PassportService.EF_CARD_ACCESS))
+        {
+            final var f = new CardAccessFile(stream);
+            final var items = f.getSecurityInfos();
+            return items == null ?
+                    Optional.empty() :
+                    items.stream()
+                    .filter(x -> x instanceof PACEInfo)
+                    .map(x -> (PACEInfo)x)
+                    .findFirst();
+        }
+        catch (CardServiceException ex) {
+            System.out.println("Could not read PACE security info.");
+            System.out.println(ex);
+            return Optional.empty();
+        }
     }
 
     private boolean isOpen() {
         return isoDep != null && passportService != null && cardService != null;
     }
-
     public void close() throws IOException {
         if (passportService != null)
             passportService.close();
