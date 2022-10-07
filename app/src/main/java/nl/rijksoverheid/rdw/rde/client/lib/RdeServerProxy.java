@@ -51,9 +51,9 @@ public class RdeServerProxy
 
     private String getUrl(String name) {
         return Arrays.stream(identityDocument.getServices())
-                .filter(x -> x.getUrl().equalsIgnoreCase(name))
+                .filter(x -> x.getId().equalsIgnoreCase(name))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException() )
+                .orElseThrow(() -> new IllegalStateException("Could not find service in identity.") )
                 .getUrl();
     }
 
@@ -61,12 +61,13 @@ public class RdeServerProxy
     {
     }
 
-    public HttpResponse<DocumentEnrolmentResponse> enrol(final DocumentEnrolmentRequestArgs enrollmentArgs, final ServicesToken authToken) throws NoSuchAlgorithmException, IOException, KeyManagementException {
+    public HttpResponse<DocumentEnrolmentResponse> enrol(final DocumentEnrolmentRequestArgs enrollmentArgs, final ServicesToken servicesToken) throws NoSuchAlgorithmException, IOException, KeyManagementException {
         if (enrollmentArgs == null)
             throw new IllegalArgumentException();
 
-        ensureIdentity(authToken.getIdentityUrl());
+        ensureIdentity(servicesToken.getIdentityUrl());
 
+        //TODO Not best practice
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
@@ -76,9 +77,8 @@ public class RdeServerProxy
             final var client = getOkHttpClient();
             final var body = RequestBody.create(requestBodyContent, MediaType.get("application/json"));
             final var request = new Request.Builder()
-                    .header("authorize", "bearer " + authToken)
+                    .header("authorize", "bearer " + servicesToken.getAuthToken())
                     //.header("Accept", "application/json")
-
                     .url(getUrl("documents.add"))
                     .post(body)
                     .build();
@@ -99,14 +99,18 @@ public class RdeServerProxy
     }
 
     private void ensureIdentity(String identityUrl) throws NoSuchAlgorithmException, KeyManagementException, IOException {
-        if (identityDocument == null)
+        if (identityDocument != null)
             return;
+
+        //TODO Not best practice
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
         final var client = getOkHttpClient();
 
         final var request = new Request.Builder()
                 .header("Accept", "application/json; utf-8")
-                .url(getUrl(identityUrl))
+                .url(identityUrl)
                 .get()
                 .build();
 

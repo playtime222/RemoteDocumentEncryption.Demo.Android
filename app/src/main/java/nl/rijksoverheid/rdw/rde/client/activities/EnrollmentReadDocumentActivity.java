@@ -34,7 +34,6 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
 
     //public static final String ENROLLMENT_ID_EXTRA_TAG = "ENROLLMENT_ID";
     public static final String DISPLAY_NAME_EXTRA_TAG = "ENROLLMENT_DISPLAY_NAME";
-    private ServicesToken authToken;
     private String displayName;
 
     @Override
@@ -55,10 +54,14 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
 
         super.onNewIntent(intent);
             final var sp = new AppSharedPreferences(this);
-            authToken = sp.readApiToken();
-            var stored = sp.readBacKey();
+            final var servicesToken = sp.readApiToken();
+            final var stored = sp.readBacKey();
             if (!stored.isComplete())
                 return;
+
+            displayName = sp.readDocumentDisplayName();
+            if (displayName == null || displayName.isEmpty())
+                displayName = "default";
 
             final var bacKey = stored.toBACKey();
 
@@ -73,19 +76,18 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
             try {
 
                 final var args = getEnrollmentArgs(tag, bacKey, new UserSelectedEnrollmentArgs(14, 8));
-                var displayName = intent.getStringExtra(EnrollmentReadDocumentActivity.DISPLAY_NAME_EXTRA_TAG);
-                if (displayName == null || displayName.isEmpty())
-                    displayName = "default";
-
                 args.setDisplayName(displayName);
 
             final var dto = Mapper.map(args);
-            var result = new RdeServerProxy().enrol(dto, authToken);
+            var result = new RdeServerProxy().enrol(dto, servicesToken);
 
             if (result.isError()) {
-                //TODO show and an error...
+                System.out.println("Document enrollment failed : '" + result.getMessage() + "'");
                 return;
             }
+
+            System.out.println("Document enrollment SUCCESS");
+            System.out.println("Document Id :" + result.getData().getId());
 
             final var nextIntent = new Intent(getApplicationContext(), MessagesListActivity.class);
             startActivity(nextIntent);

@@ -34,6 +34,6 @@ public class HttpResponse<T> {
     }
 
     public boolean isError() {
-        return code >= 200 && code < 300;
+        return  200 > code && code >= 300;
     }
 }

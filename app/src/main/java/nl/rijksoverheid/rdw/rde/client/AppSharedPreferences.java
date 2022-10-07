@@ -52,15 +52,6 @@ public class AppSharedPreferences {
     private final String MRZ_EXPIRY_EXTRA_TAG = "MRZ.Expiry";
     private final String MRZ_DOB_EXTRA_TAG = "MRZ.DOB";
 
-    public void write(BACKey value)
-    {
-        final var editor = sp.edit();
-        editor.putString(MRZ_ID_EXTRA_TAG, value.getDocumentNumber());
-        editor.putString(MRZ_DOB_EXTRA_TAG, value.getDateOfBirth());
-        editor.putString(MRZ_EXPIRY_EXTRA_TAG, value.getDateOfExpiry());
-        editor.commit();
-    }
-
     public void write(StoredBacKey value)
     {
         final var editor = sp.edit();

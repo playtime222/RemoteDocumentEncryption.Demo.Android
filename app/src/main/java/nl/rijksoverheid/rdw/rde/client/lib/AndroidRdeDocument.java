@@ -77,16 +77,8 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         if (doPace(bacKey))
             return;
 
-        //else try BAC
-        try {
-            passportService.doBAC(bacKey);
-        }
-        catch (CardServiceException ex)
-        {
-            System.out.println("BAC failed.");
-            System.out.println(ex);
-            throw ex;
-        }
+        if (!doBac(bacKey))
+            throw new IllegalStateException("Cannot start PACE or BAC.");
     }
 
     private boolean doPace(BACKey bacKey) throws IOException, GeneralSecurityException
@@ -103,15 +95,29 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
             return true;
         }
         catch (CardServiceException ex) {
-                System.out.println("PACE failed.");
-                System.out.println(ex);
-                return false;
+            System.out.println("PACE failed.");
+            System.out.println(ex);
+            return false;
+        }
+    }
+
+    private boolean doBac(BACKey bacKey)
+    {
+        try {
+            passportService.doBAC(bacKey);
+            return true;
+        }
+        catch (CardServiceException ex)
+        {
+            System.out.println("BAC failed.");
+            System.out.println(ex);
+            return false;
         }
     }
 
     private Optional<PACEInfo> findPaceSecurityInfo() throws IOException
     {
-        try(final var stream = passportService.getInputStream(PassportService.EF_CARD_ACCESS))
+        try(final var stream = passportService.getInputStream(PassportService.EF_CARD_ACCESS, 1024))
         {
             final var f = new CardAccessFile(stream);
             final var items = f.getSecurityInfos();

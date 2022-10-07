@@ -49,13 +49,17 @@ public class EnrollmentActivity extends AppCompatActivity
         clickButton.setOnClickListener(v ->
         {
             storedBacKey.DocId = editTextDocumentId.getText().toString();
-            storedBacKey.DocId = editTextDob.getText().toString();
-            storedBacKey.DocId = editTextDocDoe.getText().toString();
+            storedBacKey.Dob = editTextDob.getText().toString();
+            storedBacKey.Expiry = editTextDocDoe.getText().toString();
 
-            if (storedBacKey.isComplete())
-                new AppSharedPreferences(this).write(storedBacKey.toBACKey());
+            if (!storedBacKey.isComplete()) {
+                System.out.println("BAC Key is not complete");
+                return;
+            }
 
-            intent.putExtra(EnrollmentReadDocumentActivity.DISPLAY_NAME_EXTRA_TAG, editTextDisplayName.getText().toString());
+            final var sp = new AppSharedPreferences(this);
+            sp.write(storedBacKey);
+            sp.writeDocumentDisplayName(editTextDisplayName.getText().toString());
 
             startActivity(intent);
         });
