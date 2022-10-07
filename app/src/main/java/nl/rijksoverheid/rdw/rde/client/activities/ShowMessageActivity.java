@@ -24,12 +24,14 @@ public class ShowMessageActivity extends AppCompatActivity
         final var whenSentTextView = (TextView) findViewById(R.id.textViewWhenSent);
         final var textViewWhoFrom = (TextView) findViewById(R.id.textViewWhoFrom);
         final var textViewShortNote = (TextView) findViewById(R.id.textViewShortNote);
-        final var textViewFileContent = (TextView) findViewById(R.id.textViewFileContent);
+        final var textViewFile1Name = (TextView) findViewById(R.id.textViewFile1Name);
+        final var textViewFile1Content = (TextView) findViewById(R.id.textViewFile1Content);
 
         whenSentTextView.setText(message.getWhenSent());
         textViewWhoFrom.setText(message.getWhoFrom());
         textViewShortNote.setText(message.getShortNote());
-        textViewFileContent.setText(message.getFile1Text());
+        textViewFile1Name.setText(message.getFile1Name());
+        textViewFile1Content.setText(message.getFile1Text());
     }
 
     @Override

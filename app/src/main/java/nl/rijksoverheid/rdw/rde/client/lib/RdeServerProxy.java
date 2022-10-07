@@ -103,7 +103,7 @@ public class RdeServerProxy
             return;
 
         //TODO Not best practice
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        final var policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
         final var client = getOkHttpClient();
@@ -123,13 +123,16 @@ public class RdeServerProxy
     }
 
     //TODO async task
-    public HttpResponse<ReceivedMessageList> getMessages(final ServicesToken authToken) throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    public HttpResponse<ReceivedMessageList> getMessages(final ServicesToken servicesToken) throws IOException, NoSuchAlgorithmException, KeyManagementException {
+
+        ensureIdentity(servicesToken.getIdentityUrl());
+
         final StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
         final var client = getOkHttpClient();
         final var request = new Request.Builder()
-                .header("authorize", "bearer " + authToken)
+                .header("authorize", "bearer " + servicesToken.getAuthToken())
                 .header("Accept", "application/json; utf-8")
                 .url(getUrl("messages.list"))
                 .get()
@@ -147,7 +150,10 @@ public class RdeServerProxy
 
 
     //TODO async task
-    public HttpResponse<ReceivedMessage> getMessage(String messageId, ServicesToken authToken) throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    public HttpResponse<ReceivedMessage> getMessage(String messageId, ServicesToken servicesToken) throws IOException, NoSuchAlgorithmException, KeyManagementException {
+
+        ensureIdentity(servicesToken.getIdentityUrl());
+
         final StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
@@ -155,7 +161,7 @@ public class RdeServerProxy
 
         final var builder = new Request.Builder();
         final var request = builder
-                .header("authorize", "bearer " + authToken)
+                .header("authorize", "bearer " + servicesToken.getAuthToken())
                 .header("Accept", "application/json; utf-8")
                 .url(getUrl("messages.getById") + "/" + messageId)
                 .get()

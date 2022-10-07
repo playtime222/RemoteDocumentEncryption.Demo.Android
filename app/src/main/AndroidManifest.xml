@@ -30,10 +30,10 @@
         <activity
             android:name=".activities.EnrollmentReadDocumentActivity"
             android:exported="true"/>
-<!--        <activity-->
-<!--            android:name=".activities.MessagesListActivity"-->
-<!--            android:exported="true">-->
-<!--        </activity>-->
+        <activity
+            android:name=".activities.MessagesListActivity"
+            android:exported="true">
+        </activity>
         <activity
             android:name=".activities.DecryptMessageActivity"
             android:exported="true" />

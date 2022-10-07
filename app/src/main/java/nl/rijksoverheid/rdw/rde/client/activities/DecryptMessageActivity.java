@@ -10,18 +10,17 @@ import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 
 import net.sf.scuba.smartcards.CardServiceException;
 import net.sf.scuba.util.Hex;
 
-import org.bouncycastle.util.encoders.Base64;
 import org.jmrtd.BACKey;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.Base64;
 
 import javax.crypto.spec.SecretKeySpec;
 
@@ -29,13 +28,11 @@ import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.SimpleDecryptedMessage;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
-//import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.crypto.*;
 import nl.rijksoverheid.rdw.rde.documents.*;
 import nl.rijksoverheid.rdw.rde.messaging.*;
 import nl.rijksoverheid.rdw.rde.messaging.zipV2.*;
-import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
 public class DecryptMessageActivity extends AppCompatActivity
 {
@@ -93,7 +90,8 @@ public class DecryptMessageActivity extends AppCompatActivity
             if (getResult.isError())
                 return;
 
-            final byte[] message = Base64.decode(getResult.getData().getContentBase64());
+            //TODO stop using url style in bodies
+            final byte[] message = Base64.getUrlDecoder().decode(getResult.getData().getContentBase64());
 
             var decoder = new ZipMessageDecoder();
 
@@ -109,11 +107,15 @@ public class DecryptMessageActivity extends AppCompatActivity
             final var nextIntent = new Intent(getApplicationContext(), ShowMessageActivity.class);
 
             final var simple = new SimpleDecryptedMessage();
-            //simple.setId();
-            //simple.setWhenSent(decryptedMessage.get);
-            //simple.setWhenSent(decryptedMessage.get);
+            simple.setId(messageId);
+            simple.setWhenSent(getResult.getData().getWhenSent());
+            simple.setWhoFrom(getResult.getData().getSenderEmail());
             simple.setShortNote(decryptedMessage.getNote());
-            simple.setFile1Text(new String(decryptedMessage.getFiles()[0].getContent(), StandardCharsets.UTF_8));
+
+            if (decryptedMessage.getFiles().length > 0) {
+                simple.setFile1Name(decryptedMessage.getFiles()[0].getFilename());
+                simple.setFile1Text(getTextFromFile(decryptedMessage.getFiles()[0].getContent()));
+            }
 
             nextIntent.putExtra(ShowMessageActivity.ExtraTag, simple);
             startActivity(nextIntent);
@@ -129,6 +131,17 @@ public class DecryptMessageActivity extends AppCompatActivity
         catch (CardServiceException e)
         {
             e.printStackTrace();
+        }
+    }
+
+    String getTextFromFile(byte[] fileContent) {
+        try{
+            return new String(fileContent, StandardCharsets.UTF_8);
+        }
+        catch(Exception ex)
+        {
+            System.out.println("File content is not UTF-8 test: " + ex);
+            return Hex.toHexString(fileContent);
         }
     }
 

@@ -103,10 +103,37 @@
         android:layout_marginRight="8dp"
 
         app:layout_constraintTop_toBottomOf="@+id/note_header"
-        app:layout_constraintBottom_toTopOf="@+id/content_header"
+        app:layout_constraintBottom_toTopOf="@+id/file1name_header"
 
         />
 
+    <TextView
+        android:id="@+id/file1name_header"
+        android:layout_height="16dp"
+
+        android:layout_width="match_parent"
+        android:text="File 1 Name:"
+        app:layout_constraintStart_toStartOf="parent"
+
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+
+        app:layout_constraintTop_toBottomOf="@+id/textViewShortNote"
+        app:layout_constraintBottom_toTopOf="@+id/textViewFile1Name"
+        />
+
+    <TextView
+        android:id="@+id/textViewFile1Name"
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+
+        android:text="textViewFile1Name"
+
+        app:layout_constraintBottom_toBottomOf="@+id/file1name_header"
+        app:layout_constraintBottom_toTopOf="@+id/content_header"
+    />
     <TextView
         android:id="@+id/content_header"
         android:layout_height="16dp"
@@ -119,20 +146,21 @@
         android:layout_marginRight="8dp"
 
         app:layout_constraintTop_toBottomOf="@+id/textViewShortNote"
-        app:layout_constraintBottom_toTopOf="@+id/textViewFileContent"
+        app:layout_constraintBottom_toTopOf="@+id/textViewFile1Content"
         />
 
-    <TextView
-        android:id="@+id/textViewFileContent"
+   <TextView
+        android:id="@+id/textViewFile1Content"
         android:layout_width="match_parent"
         android:layout_height="288dp"
-        android:layout_marginLeft="8dp"
+       android:layout_marginLeft="8dp"
+       android:layout_marginRight="8dp"
 
         android:minHeight="288dp"
 
-        android:text="textViewFileContent"
+        android:text="textViewFile1Content"
 
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/content_header"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/content_header" />
 

@@ -37,8 +37,8 @@ public class MessagesListActivity extends Activity implements AdapterView.OnItem
         final HttpResponse<ReceivedMessageList> messageListResult;
         try {
             final var sp = new AppSharedPreferences(this);
-            final var authToken = sp.readApiToken();
-            messageListResult = new RdeServerProxy().getMessages(authToken);
+            final var servicesToken = sp.readApiToken();
+            messageListResult = new RdeServerProxy().getMessages(servicesToken);
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
             e.printStackTrace();
             return;
@@ -54,6 +54,9 @@ public class MessagesListActivity extends Activity implements AdapterView.OnItem
         final ListView listView = findViewById(R.id.messageItems);
         listView.setOnItemClickListener(this);
         final var items = Arrays.stream(messageListResult.getData().getItems()).map(Mapper::map).toArray(MessageMetadata[]::new);
+
+        System.out.println("Messages found: " + items.length);
+
         final var adaptor = new SimpleArrayAdapter(listView.getContext(), items);
         listView.setAdapter(adaptor);
     }

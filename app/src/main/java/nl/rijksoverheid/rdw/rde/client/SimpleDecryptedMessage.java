@@ -9,6 +9,7 @@ public class SimpleDecryptedMessage implements Parcelable
     private String whoFrom;
     private String whenSent; //ISO sortable datetime
     private String shortNote;
+    private String file1Name;
     private String file1Text;
 
     public SimpleDecryptedMessage()
@@ -73,14 +74,15 @@ public class SimpleDecryptedMessage implements Parcelable
 
         final var data = in.createStringArray();
 
-        if (data.length != 5)
+        if (data.length != 6)
             return;
 
         this.id = Integer.parseInt(data[0]);
         this.whenSent = data[1];
         this.whoFrom = data[2];
         this.shortNote = data[3];
-        this.file1Text = data[4];
+        this.file1Name = data[4];
+        this.file1Text = data[5];
     }
 
     @Override
@@ -99,6 +101,7 @@ public class SimpleDecryptedMessage implements Parcelable
                 whoFrom,
                 whenSent,
                 shortNote,
+                file1Name,
                 file1Text
         });
     }
@@ -114,4 +117,12 @@ public class SimpleDecryptedMessage implements Parcelable
             return new SimpleDecryptedMessage[size];
         }
     };
+
+    public String getFile1Name() {
+        return file1Name;
+    }
+
+    public void setFile1Name(String file1Name) {
+        this.file1Name = file1Name;
+    }
 }

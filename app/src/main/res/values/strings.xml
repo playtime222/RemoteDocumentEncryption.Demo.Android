@@ -52,7 +52,7 @@
     <string name="message_from_header">From:</string>
     <string name="message_when_header">Sent:</string>
     <string name="message_note_header">Note:</string>
-    <string name="message_content_header">Content:</string>
+    <string name="message_content_header">File 1 Content:</string>
     <string name="title_activity_scan_token">ScanToken</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
