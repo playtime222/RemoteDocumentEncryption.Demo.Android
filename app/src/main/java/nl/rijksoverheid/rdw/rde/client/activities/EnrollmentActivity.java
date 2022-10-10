@@ -2,6 +2,9 @@ package nl.rijksoverheid.rdw.rde.client.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -10,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
+import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
 import nl.rijksoverheid.rdw.rde.client.R;
 
 public class EnrollmentActivity extends AppCompatActivity
@@ -28,6 +32,9 @@ public class EnrollmentActivity extends AppCompatActivity
             // nothing to do
         });
 
+        getSupportActionBar().setTitle(R.string.appbar_title);
+        getSupportActionBar().setSubtitle("Enrollment - Enter document details");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_document_enroll);
 
@@ -37,8 +44,6 @@ public class EnrollmentActivity extends AppCompatActivity
         editTextDocumentId = findViewById(R.id.editTextDocumentId);
         editTextDob = findViewById(R.id.editTextDob);
         editTextDocDoe = findViewById(R.id.editTextDocDoe);
-
-        final var intent = new Intent(getApplicationContext(), EnrollmentReadDocumentActivity.class);
 
         final var storedBacKey = new AppSharedPreferences(this).readBacKey();
 
@@ -61,7 +66,26 @@ public class EnrollmentActivity extends AppCompatActivity
             sp.write(storedBacKey);
             sp.writeDocumentDisplayName(editTextDisplayName.getText().toString());
 
+            final var intent = new Intent(getApplicationContext(), EnrollmentReadDocumentActivity.class);
             startActivity(intent);
         });
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (new MenuItemHandler().onOptionsItemSelected(item, this))
+            return true;
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+
 }

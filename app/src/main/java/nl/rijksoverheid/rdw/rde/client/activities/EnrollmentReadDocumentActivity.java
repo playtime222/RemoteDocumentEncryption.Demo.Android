@@ -11,6 +11,9 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import net.sf.scuba.smartcards.CardServiceException;
 
@@ -20,19 +23,16 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
-//import nl.rijksoverheid.rdw.rde.client.Mapper;
 import nl.rijksoverheid.rdw.rde.client.Mapper;
+import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
-//import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
-import nl.rijksoverheid.rdw.rde.client.lib.ServicesToken;
 import nl.rijksoverheid.rdw.rde.documents.*;
 
 public class EnrollmentReadDocumentActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
 
-    //public static final String ENROLLMENT_ID_EXTRA_TAG = "ENROLLMENT_ID";
     public static final String DISPLAY_NAME_EXTRA_TAG = "ENROLLMENT_DISPLAY_NAME";
     private String displayName;
 
@@ -43,9 +43,28 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
             // nothing to do
         });
 
+        getSupportActionBar().setTitle(R.string.appbar_title);
+        getSupportActionBar().setSubtitle("Enrollment - Read MRTD");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enrollment_read_document);
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (new MenuItemHandler().onOptionsItemSelected(item, this))
+            return true;
+
+        return super.onOptionsItemSelected(item);
+    }
+
 
     @Override
     protected void onNewIntent(final Intent intent) {
@@ -112,7 +131,6 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
             dg14content = doc.getFileContent(14);
         }
 
-        //var dg14 = new Dg14Reader(dg14content);
         try (final var doc = new AndroidRdeDocument()) {
             doc.open(tag, bacKey);
             return doc.getEnrollmentArgs(args, dg14content);

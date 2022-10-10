@@ -4,8 +4,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
 
+import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.SimpleDecryptedMessage;
 
@@ -39,4 +43,20 @@ public class ShowMessageActivity extends AppCompatActivity
     {
         super.onNewIntent(intent);
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (new MenuItemHandler().onOptionsItemSelected(item, this))
+            return true;
+
+        return super.onOptionsItemSelected(item);
+    }
+
 }

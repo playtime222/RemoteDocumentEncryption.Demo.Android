@@ -11,6 +11,9 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import net.sf.scuba.smartcards.CardServiceException;
 import net.sf.scuba.util.Hex;
@@ -25,6 +28,7 @@ import java.util.Base64;
 import javax.crypto.spec.SecretKeySpec;
 
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
+import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.SimpleDecryptedMessage;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
@@ -41,12 +45,30 @@ public class DecryptMessageActivity extends AppCompatActivity
     public static final String DECRYPT_MESSAGE_ID = "DECRYPT_MESSAGE_URL";
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (new MenuItemHandler().onOptionsItemSelected(item, this))
+            return true;
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState)
     {
         nfcSettingsLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result ->
         {
             // nothing to do
         });
+
+        getSupportActionBar().setTitle(R.string.appbar_title);
+        getSupportActionBar().setSubtitle("Decrypt Message");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enrollment_read_document);
@@ -71,7 +93,7 @@ public class DecryptMessageActivity extends AppCompatActivity
 
         final var storedBacKey = new AppSharedPreferences(this).readBacKey();
         if (!storedBacKey.isComplete())
-            return;
+            return; //TODO show bac not complete - go to Enrollment
 
         final var bacKey = storedBacKey.toBACKey();
 

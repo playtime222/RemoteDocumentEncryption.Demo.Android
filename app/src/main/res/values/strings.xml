@@ -41,8 +41,8 @@
     <string name="position_document_for_reading">Position document so that the NFC chip can be accessed.</string>
     <string name="title_activity_list_documents">ListDocumentsActivity</string>
 
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="appbar_title">RDE Demo</string>
+
     <string name="hint_password">Account password</string>
     <string name="hint_user_name">Account email</string>
     <string name="account_header">Account Login</string>

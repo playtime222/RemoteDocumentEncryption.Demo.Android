@@ -25,7 +25,7 @@ public class AppSharedPreferences {
 
     public ServicesToken readApiToken()
     {
-        var token = sp.getString(API_TOKEN, "Not a token...");
+        var token = sp.getString(API_TOKEN, "{}");
         return new Gson().fromJson(token, ServicesToken.class);
     }
 
@@ -69,10 +69,18 @@ public class AppSharedPreferences {
         return new StoredBacKey(v1,v2,v3);
     }
 
-
     public final String DOCUMENT_NUMBER = "SPECI2014";
     public final String DATE_OF_BIRTH = "650310";
     public final String DATE_OF_EXPIRY = "240309";
+
+    public void clear() {
+        final var editor = sp.edit();
+        editor.putString(MRZ_ID_EXTRA_TAG, null);
+        editor.putString(MRZ_DOB_EXTRA_TAG, null);
+        editor.putString(MRZ_EXPIRY_EXTRA_TAG, null);
+        editor.putString(API_TOKEN, null);
+        editor.commit();
+    }
 }
 
 

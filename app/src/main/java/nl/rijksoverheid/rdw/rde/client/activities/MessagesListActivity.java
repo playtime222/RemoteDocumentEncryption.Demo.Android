@@ -4,12 +4,16 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -18,6 +22,7 @@ import java.util.Arrays;
 
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.Mapper;
+import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
 import nl.rijksoverheid.rdw.rde.client.MessageMetadata;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.SimpleArrayAdapter;
@@ -25,12 +30,31 @@ import nl.rijksoverheid.rdw.rde.client.lib.HttpResponse;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.client.lib.data.ReceivedMessageList;
 
-public class MessagesListActivity extends Activity implements AdapterView.OnItemClickListener
+public class MessagesListActivity extends AppCompatActivity implements AdapterView.OnItemClickListener
 {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (new MenuItemHandler().onOptionsItemSelected(item, this))
+            return true;
+
+        return super.onOptionsItemSelected(item);
+    }
+
     /** Called when the activity is first created. */
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onCreate(final Bundle savedInstanceState) {
+
+        getSupportActionBar().setTitle(R.string.appbar_title);
+        getSupportActionBar().setSubtitle("Received Messages");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_messages);
 
