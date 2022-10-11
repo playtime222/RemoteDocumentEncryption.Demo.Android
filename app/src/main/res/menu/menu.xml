@@ -17,8 +17,18 @@
         android:title="Messages"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_reset_data"
+        android:id="@+id/action_clear_stored_mrz"
         android:orderInCategory="100"
-        android:title="Reset"
+        android:title="Forget stored MRZ"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_clear_api_token"
+        android:orderInCategory="100"
+        android:title="Forget API token"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_use_speci2014_mrz"
+        android:orderInCategory="100"
+        android:title="Use SPEC2014 MRZ"
         app:showAsAction="never" />
 </menu>

@@ -27,8 +27,19 @@ public class MenuItemHandler {
                 currentActivity.startActivity(intent);
                 return true;
             }
-            case R.id.action_reset_data: {
-                new ResetCommand().execute(currentActivity);
+            case R.id.action_use_speci2014_mrz: {
+                final var sp = new AppSharedPreferences(currentActivity);
+                sp.useSpec2014();
+               return true;
+            }
+            case R.id.action_clear_stored_mrz: {
+                final var sp = new AppSharedPreferences(currentActivity);
+                sp.clearMrz();
+                return true;
+            }
+            case R.id.action_clear_api_token: {
+                final var sp = new AppSharedPreferences(currentActivity);
+                sp.clearApiToken();
                 final var intent = new Intent(currentActivity.getApplicationContext(), MainActivity.class);
                 currentActivity.startActivity(intent);
                 return true;

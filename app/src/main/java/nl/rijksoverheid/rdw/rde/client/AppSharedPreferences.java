@@ -63,9 +63,9 @@ public class AppSharedPreferences {
 
     public StoredBacKey readBacKey()
     {
-        final var v1 = sp.getString(MRZ_ID_EXTRA_TAG, DOCUMENT_NUMBER);
-        final var v2 = sp.getString(MRZ_DOB_EXTRA_TAG, DATE_OF_BIRTH);
-        final var v3 = sp.getString(MRZ_EXPIRY_EXTRA_TAG, DATE_OF_EXPIRY);
+        final var v1 = sp.getString(MRZ_ID_EXTRA_TAG, "");
+        final var v2 = sp.getString(MRZ_DOB_EXTRA_TAG, "");
+        final var v3 = sp.getString(MRZ_EXPIRY_EXTRA_TAG, "");
         return new StoredBacKey(v1,v2,v3);
     }
 
@@ -73,11 +73,24 @@ public class AppSharedPreferences {
     public final String DATE_OF_BIRTH = "650310";
     public final String DATE_OF_EXPIRY = "240309";
 
-    public void clear() {
+    public void useSpec2014() {
+        final var editor = sp.edit();
+        editor.putString(MRZ_ID_EXTRA_TAG, DOCUMENT_NUMBER);
+        editor.putString(MRZ_DOB_EXTRA_TAG, DATE_OF_BIRTH);
+        editor.putString(MRZ_EXPIRY_EXTRA_TAG, DATE_OF_EXPIRY);
+        editor.commit();
+    }
+
+    public void clearMrz() {
         final var editor = sp.edit();
         editor.putString(MRZ_ID_EXTRA_TAG, null);
         editor.putString(MRZ_DOB_EXTRA_TAG, null);
         editor.putString(MRZ_EXPIRY_EXTRA_TAG, null);
+        editor.commit();
+    }
+
+    public void clearApiToken() {
+        final var editor = sp.edit();
         editor.putString(API_TOKEN, null);
         editor.commit();
     }
