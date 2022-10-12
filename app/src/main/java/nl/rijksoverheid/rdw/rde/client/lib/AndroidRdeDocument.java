@@ -57,6 +57,26 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         return shortFileIdentifier + 0x100;
     }
 
+    public void open(Tag tag, PACEKeySpec paceKeySpec)
+            throws CardServiceException, GeneralSecurityException, IOException {
+        if (tag == null)
+            throw new IllegalArgumentException();
+        if (paceKeySpec == null)
+            throw new IllegalArgumentException();
+
+        if (isOpen())
+            throw new IllegalStateException();
+
+        isoDep = IsoDep.get(tag);
+        isoDep.setTimeout(100000); //Long cos debugging
+        cardService = CardService.getInstance(isoDep);
+        passportService = new PassportService(cardService, 256, 256, 256, true, true);
+        passportService.open();
+
+        if (!doPace(paceKeySpec))
+            throw new IllegalStateException("Cannot start PACE.");
+    }
+
     public void open(Tag tag, BACKey bacKey)
             throws CardServiceException, GeneralSecurityException, IOException {
         if (tag == null)
@@ -92,6 +112,28 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
             final var p = paceInfo.get();
             var paceKey = PACEKeySpec.createMRZKey(bacKey);
             passportService.doPACE(paceKey, p.getObjectIdentifier(), PACEInfo.toParameterSpec(p.getParameterId()), p.getParameterId());
+            System.out.println("PACE succeeded.");
+            return true;
+        }
+        catch (CardServiceException ex) {
+            System.out.println("PACE failed.");
+            System.out.println(ex);
+            return false;
+        }
+    }
+
+    //For xxxx -> 0.4.0.127.0.7.2.2.4.2.4, PACEInfo [protocol: id-PACE-ECDH-GM-AES-CBC-CMAC-256, version: 2, parameterId: BrainpoolP320r1]
+    private boolean doPace(PACEKeySpec paceKey) throws IOException, GeneralSecurityException
+    {
+        try {
+            var paceInfo = findPaceSecurityInfo();
+            if (!paceInfo.isPresent())
+                return false;
+
+            //TODO use Card Authentication Number
+            final var p = paceInfo.get();
+            passportService.doPACE(paceKey, p.getObjectIdentifier(), PACEInfo.toParameterSpec(p.getParameterId()), p.getParameterId());
+            System.out.println("PACE succeeded.");
             return true;
         }
         catch (CardServiceException ex) {
@@ -105,6 +147,7 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
     {
         try {
             passportService.doBAC(bacKey);
+            System.out.println("BAC succeeded.");
             return true;
         }
         catch (CardServiceException ex)

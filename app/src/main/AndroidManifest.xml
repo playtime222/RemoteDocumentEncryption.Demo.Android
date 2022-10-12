@@ -29,6 +29,9 @@
             android:theme="@style/Theme.RDESample.Fullscreen">
         </activity>
         <activity
+            android:name=".activities.TestRdeRoundTripDrivingLicenceActivity"
+            android:exported="true" />
+        <activity
             android:name=".activities.EnrollmentActivity"
             android:exported="true" />
         <activity
