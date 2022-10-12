@@ -72,10 +72,13 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         cardService = CardService.getInstance(isoDep);
         passportService = new PassportService(cardService, RdeDocumentConfig.TRANCEIVE_LENGTH_FOR_SECURE_MESSAGING, RdeDocumentConfig.MAX_BLOCK_SIZE, true, true);
         passportService.open();
-        passportService.sendSelectApplet(false);
 
-        if (doPace(bacKey))
+        if (doPace(bacKey)) {
+            passportService.sendSelectApplet(true);
             return;
+        }
+
+        passportService.sendSelectApplet(false);
 
         if (!doBac(bacKey))
             throw new IllegalStateException("Cannot start PACE or BAC.");
@@ -227,7 +230,6 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         }
         return sodFile;
     }
-
     private byte[] readFileContent(int shortFileId) throws IOException, CardServiceException {
         var fileId = toFileIdentifier(shortFileId);
         try (var stream = passportService.getInputStream((short) fileId, RdeDocumentConfig.MAX_BLOCK_SIZE)) {
