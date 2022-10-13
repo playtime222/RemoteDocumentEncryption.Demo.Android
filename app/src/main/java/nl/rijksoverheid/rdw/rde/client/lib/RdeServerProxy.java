@@ -36,7 +36,6 @@ import nl.rijksoverheid.rdw.rde.client.lib.data.DocumentEnrolmentRequestArgs;
 import nl.rijksoverheid.rdw.rde.client.lib.data.DocumentEnrolmentResponse;
 import nl.rijksoverheid.rdw.rde.client.lib.data.ReceivedMessage;
 import nl.rijksoverheid.rdw.rde.client.lib.data.ReceivedMessageList;
-import nl.rijksoverheid.rdw.rde.remoteapi.*;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
