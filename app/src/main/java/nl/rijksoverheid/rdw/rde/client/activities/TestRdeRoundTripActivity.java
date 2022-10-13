@@ -23,11 +23,9 @@ import java.security.GeneralSecurityException;
 import nl.rijksoverheid.rdw.rde.casessionutilities.RdeMessageParameters;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
-import nl.rijksoverheid.rdw.rde.documents.RdeDocumentEnrollmentInfo;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
 import nl.rijksoverheid.rdw.rde.messaging.MessageCipherInfo;
 import nl.rijksoverheid.rdw.rde.messaging.RdeMessageDecryptionInfo;
-//import nl.rijksoverheid.rdw.rde.messaging.RdeMessageParameters;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
 public class TestRdeRoundTripActivity extends AppCompatActivity
@@ -62,9 +60,16 @@ public class TestRdeRoundTripActivity extends AppCompatActivity
         if (tag == null)
             throw new IllegalStateException("Test failed. No NfcAdaptor Tag.");
 
+        //Speci2014
         final String DOCUMENT_NUMBER = "SPECI2014";
         final String DATE_OF_BIRTH = "650310";
         final String DATE_OF_EXPIRY = "240309";
+
+//        //Rijbewijs
+//        final String DOCUMENT_NUMBER = "509496111";
+//        final String DATE_OF_BIRTH = "810217";
+//        final String DATE_OF_EXPIRY = "241115";
+
         final var SPEC2014BacKey = new BACKey(DOCUMENT_NUMBER,DATE_OF_BIRTH,DATE_OF_EXPIRY);
 
         var file = 2;

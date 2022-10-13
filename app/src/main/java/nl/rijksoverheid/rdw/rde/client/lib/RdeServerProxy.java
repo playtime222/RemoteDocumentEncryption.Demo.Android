@@ -8,18 +8,8 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -36,7 +26,6 @@ import nl.rijksoverheid.rdw.rde.client.lib.data.DocumentEnrolmentRequestArgs;
 import nl.rijksoverheid.rdw.rde.client.lib.data.DocumentEnrolmentResponse;
 import nl.rijksoverheid.rdw.rde.client.lib.data.ReceivedMessage;
 import nl.rijksoverheid.rdw.rde.client.lib.data.ReceivedMessageList;
-import nl.rijksoverheid.rdw.rde.remoteapi.*;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

@@ -73,18 +73,15 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         passportService = new PassportService(cardService, RdeDocumentConfig.TRANCEIVE_LENGTH_FOR_SECURE_MESSAGING, RdeDocumentConfig.MAX_BLOCK_SIZE, true, true);
         passportService.open();
 
-        if (doPace(bacKey)) {
-            passportService.sendSelectApplet(true);
+        if (doPace(PACEKeySpec.createMRZKey(bacKey))) {
             return;
         }
-
-        passportService.sendSelectApplet(false);
 
         if (!doBac(bacKey))
             throw new IllegalStateException("Cannot start PACE or BAC.");
     }
 
-    private boolean doPace(BACKey bacKey) throws IOException, GeneralSecurityException
+    private boolean doPace(PACEKeySpec paceKey) throws IOException, GeneralSecurityException
     {
         try {
             var paceInfo = findPaceSecurityInfo();
@@ -93,8 +90,9 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
 
             //TODO use Card Authentication Number
             final var p = paceInfo.get();
-            var paceKey = PACEKeySpec.createMRZKey(bacKey);
             passportService.doPACE(paceKey, p.getObjectIdentifier(), PACEInfo.toParameterSpec(p.getParameterId()), p.getParameterId());
+            passportService.sendSelectApplet(true);
+            System.out.println("PACE succeeded.");
             return true;
         }
         catch (CardServiceException ex) {
@@ -107,7 +105,9 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
     private boolean doBac(BACKey bacKey)
     {
         try {
+            passportService.sendSelectApplet(false); //TODO remove repetition?
             passportService.doBAC(bacKey);
+            System.out.println("BAC succeeded.");
             return true;
         }
         catch (CardServiceException ex)
