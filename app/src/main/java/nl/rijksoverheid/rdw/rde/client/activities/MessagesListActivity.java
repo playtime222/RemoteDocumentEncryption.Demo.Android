@@ -106,7 +106,7 @@ public class MessagesListActivity extends AppCompatActivity implements AdapterVi
             throw new IllegalArgumentException();
 
         final var itemAtPosition = adapter.getItemAtPosition(position);
-        final var intent = new Intent(getApplicationContext(), DecryptMessageActivity.class);
+        final var intent = new Intent(getApplicationContext(), EnterMrzActivity.class);
         intent.putExtra(DecryptMessageActivity.DECRYPT_MESSAGE_ID, ((MessageMetadata)itemAtPosition).getId());
         MessagesListActivity.this.startActivity(intent);
     }
