@@ -26,6 +26,7 @@ import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.Mapper;
 import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
 import nl.rijksoverheid.rdw.rde.client.R;
+import nl.rijksoverheid.rdw.rde.client.activities.Errors.ShowErrorActivity;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.documents.*;
@@ -84,17 +85,23 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
 
             final var bacKey = stored.toBACKey();
 
-            if (!NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()))
+            if (!NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction())) {
+                ShowErrorActivity.show("Could not find NFC reader (discovery).", this);
                 return;
-
+            }
             Tag tag = intent.getExtras().getParcelable(NfcAdapter.EXTRA_TAG);
 
-            if (tag == null)
-                return; //TODO failed
+            if (tag == null) {
+                ShowErrorActivity.show("Could not find NFC reader (tag).", this);
+                return;
+            }
 
             try {
 
                 final var args = getEnrollmentArgs(tag, bacKey, new UserSelectedEnrollmentArgs(14, 8));
+                if (args == null)
+                    return;
+
                 args.setDisplayName(displayName);
 
             final var dto = Mapper.map(args);
@@ -102,6 +109,7 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
 
             if (result.isError()) {
                 System.out.println("Document enrollment failed : '" + result.getMessage() + "'");
+                ShowErrorActivity.show("Document enrollment failed : '" + result.getMessage() + "'", this);
                 return;
             }
 
@@ -112,14 +120,16 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
             startActivity(nextIntent);
 
         } catch (GeneralSecurityException e) {
+            ShowErrorActivity.show("Document enrollment failed : '" + e + "'", this);
             e.printStackTrace();
         } catch (IOException e) {
+            ShowErrorActivity.show("Document enrollment failed : '" + e + "'", this);
             e.printStackTrace();
         } catch (CardServiceException e) {
+            ShowErrorActivity.show("Document enrollment failed : '" + e + "'", this);
             e.printStackTrace();
         }
     }
-
 
     private RdeDocumentEnrollmentInfo getEnrollmentArgs(final Tag tag, final BACKey bacKey,
                                                         final UserSelectedEnrollmentArgs args)
@@ -127,12 +137,26 @@ public class EnrollmentReadDocumentActivity extends AppCompatActivity {
 
         byte[] dg14content;
         try (final var doc = new AndroidRdeDocument()) {
-            doc.open(tag, bacKey);
+            try {
+                doc.open(tag, bacKey);
+            }
+            catch(IllegalStateException __)
+            {
+                ShowErrorActivity.show("Could not connect to MRTD with either PACE or BAC when reading DG14.",this);
+                return null;
+            }
             dg14content = doc.getFileContent(14);
         }
 
         try (final var doc = new AndroidRdeDocument()) {
-            doc.open(tag, bacKey);
+            try {
+                doc.open(tag, bacKey);
+            }
+            catch(IllegalStateException __)
+            {
+                ShowErrorActivity.show("Could not connect to MRTD with either PACE or BAC when enrolling.",this);
+                return null;
+            }
             return doc.getEnrollmentArgs(args, dg14content);
         } catch (CardServiceException ex) {
             ex.printStackTrace();
