@@ -11,6 +11,7 @@ import net.sf.scuba.util.Hex;
 
 import nl.rijksoverheid.rdw.rde.casessionutilities.RdeMessageParameters;
 import nl.rijksoverheid.rdw.rde.client.SecureWrapperDebug;
+import nl.rijksoverheid.rdw.rde.client.activities.Errors.ShowErrorActivity;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentConfig;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentEnrollmentInfo;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
@@ -46,6 +47,8 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
     private CardService cardService;
     private PassportService passportService;
     private IsoDep isoDep;
+
+    private String errorMessage = "";
 
     private final RdeDocumentContentAuthentication authenticator = new RdeDocumentContentAuthentication();
     private SODFile sodFile;

@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
 import nl.rijksoverheid.rdw.rde.client.R;
+import nl.rijksoverheid.rdw.rde.client.activities.Errors.ShowErrorActivity;
 
 public class EnrollmentActivity extends AppCompatActivity
 {
@@ -59,6 +60,7 @@ public class EnrollmentActivity extends AppCompatActivity
 
             if (!storedBacKey.isComplete()) {
                 System.out.println("BAC Key is not complete");
+                ShowErrorActivity.show("The MRZ information is not complete. Please try again.", this);
                 return;
             }
 
