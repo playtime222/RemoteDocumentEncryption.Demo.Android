@@ -31,10 +31,10 @@ import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.SimpleDecryptedMessage;
+import nl.rijksoverheid.rdw.rde.client.activities.Errors.ShowErrorActivity;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.crypto.*;
-import nl.rijksoverheid.rdw.rde.documents.*;
 import nl.rijksoverheid.rdw.rde.messaging.*;
 import nl.rijksoverheid.rdw.rde.messaging.zipV2.*;
 
@@ -109,8 +109,10 @@ public class DecryptMessageActivity extends AppCompatActivity
 
             final var getResult = new RdeServerProxy().getMessage("" + messageId, authToken);
 
-            if (getResult.isError())
+            if (getResult.isError()) {
+                ShowErrorActivity.show("Could not contact server or obtain message: " + getResult.getMessage() + "/" + getResult.getMessage(), this);
                 return;
+            }
 
             //TODO stop using url style in bodies
             final byte[] message = Base64.getUrlDecoder().decode(getResult.getData().getContentBase64());
@@ -144,14 +146,17 @@ public class DecryptMessageActivity extends AppCompatActivity
         }
         catch (GeneralSecurityException e)
         {
+            ShowErrorActivity.show("Could not access MRTD: " + e, this);
             e.printStackTrace();
         }
         catch (IOException e)
         {
+            ShowErrorActivity.show("Could not access MRTD: " + e, this);
             e.printStackTrace();
         }
         catch (CardServiceException e)
         {
+            ShowErrorActivity.show("Could not access MRTD: " + e, this);
             e.printStackTrace();
         }
     }
@@ -167,17 +172,31 @@ public class DecryptMessageActivity extends AppCompatActivity
         }
     }
 
-    private static byte[] getApduResponseForDecryption(final BACKey bacKey, final Tag tag, final MessageCipherInfo mca) throws IOException, CardServiceException, GeneralSecurityException {
+    private byte[] getApduResponseForDecryption(final BACKey bacKey, final Tag tag, final MessageCipherInfo mca) throws IOException, CardServiceException, GeneralSecurityException {
 
         byte[] dg14content;
         try (final var doc = new AndroidRdeDocument()) {
-            doc.open(tag, bacKey);
+            try {
+                doc.open(tag, bacKey);
+            }
+            catch(IllegalStateException __)
+            {
+                ShowErrorActivity.show("Could not connect to MRTD with either PACE or BAC when reading DG14.",this);
+                return new byte[0];
+            }
             dg14content = doc.getFileContent(14);
         }
 
         try (final var doc = new AndroidRdeDocument())
         {
-            doc.open(tag, bacKey);
+            try {
+                doc.open(tag, bacKey);
+            }
+            catch(IllegalStateException __)
+            {
+                ShowErrorActivity.show("Could not connect to MRTD with either PACE or BAC when attempting decrypt.",this);
+                return new byte[0];
+            }
             return doc.getApduResponseForDecryption(mca, dg14content);
         }
     }
