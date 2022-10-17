@@ -122,6 +122,9 @@ public class DecryptMessageActivity extends AppCompatActivity
             var mca = decoder.decodeRdeSessionArgs(message);
 
             final var response = getApduResponseForDecryption(bacKey, tag, mca);
+            if (response == null)
+                return; //Should now display the error message activity.
+
             System.out.println("RESPONSE  :" + Hex.toHexString(response));
             final var key = Crypto.GetAes256SecretKeyFromResponse(response);
             System.out.println("SECRET KEY:" + Hex.toHexString(key));
@@ -182,7 +185,7 @@ public class DecryptMessageActivity extends AppCompatActivity
             catch(IllegalStateException __)
             {
                 ShowErrorActivity.show("Could not connect to MRTD with either PACE or BAC when reading DG14.",this);
-                return new byte[0];
+                return null;
             }
             dg14content = doc.getFileContent(14);
         }
@@ -195,7 +198,7 @@ public class DecryptMessageActivity extends AppCompatActivity
             catch(IllegalStateException __)
             {
                 ShowErrorActivity.show("Could not connect to MRTD with either PACE or BAC when attempting decrypt.",this);
-                return new byte[0];
+                return null;
             }
             return doc.getApduResponseForDecryption(mca, dg14content);
         }
