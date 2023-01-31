@@ -27,6 +27,7 @@ import org.jmrtd.lds.PACEInfo;
 import org.jmrtd.lds.SODFile;
 import org.jmrtd.protocol.EACCAAPDUSender;
 import org.jmrtd.protocol.EACCAProtocol;
+import org.jmrtd.protocol.ReadBinaryAPDUSender;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -58,6 +59,26 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
             throw new IllegalArgumentException();
 
         return shortFileIdentifier + 0x100;
+    }
+    public void open(Tag tag, PACEKeySpec paceKey)
+            throws CardServiceException, GeneralSecurityException, IOException {
+        if (tag == null)
+            throw new IllegalArgumentException();
+        if (paceKey == null)
+            throw new IllegalArgumentException();
+
+        if (isOpen())
+            throw new IllegalStateException();
+
+        isoDep = IsoDep.get(tag);
+        isoDep.setTimeout(100000); //Long cos debugging
+        cardService = CardService.getInstance(isoDep);
+        passportService = new PassportService(cardService, RdeDocumentConfig.TRANCEIVE_LENGTH_FOR_SECURE_MESSAGING, RdeDocumentConfig.MAX_BLOCK_SIZE, true, true);
+        passportService.open();
+
+        if (!doPace(paceKey)) {
+            throw new IllegalStateException("Cannot start PACE or BAC.");
+        }
     }
 
     public void open(Tag tag, BACKey bacKey)
@@ -339,5 +360,10 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
     private CommandAPDU createRbCommandAPDU(final int shortFileId, final int fidByteCount) {
         int sfi = 0x80 | (shortFileId & 0xFF);
         return new CommandAPDU(ISO7816.CLA_ISO7816, ISO7816.INS_READ_BINARY, (byte) sfi, 0, fidByteCount);
+    }
+
+
+    public byte[] doJobTest() throws CardServiceException, IOException, GeneralSecurityException {
+        return new ReadBinaryAPDUSender(cardService).sendReadBinary(null, passportService.SFI_DG14, 0, 1024, true, false);
     }
 }

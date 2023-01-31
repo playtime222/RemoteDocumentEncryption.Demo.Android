@@ -20,15 +20,11 @@ import org.jmrtd.BACKey;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
-import nl.rijksoverheid.rdw.rde.messaging.MessageCipherInfo;
-import nl.rijksoverheid.rdw.rde.messaging.RdeMessageDecryptionInfo;
-import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
-public class TestRdeEnrollmentActivity extends AppCompatActivity
+public class TestJobActivity extends AppCompatActivity
 {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
 
@@ -60,11 +56,6 @@ public class TestRdeEnrollmentActivity extends AppCompatActivity
         if (tag == null)
             throw new IllegalStateException("Test failed. No NfcAdaptor Tag.");
 
-        final String DOCUMENT_NUMBER = "SPECI2014";
-        final String DATE_OF_BIRTH = "650310";
-        final String DATE_OF_EXPIRY = "240309";
-        final var SPEC2014BacKey = new BACKey(DOCUMENT_NUMBER,DATE_OF_BIRTH,DATE_OF_EXPIRY);
-
         if (!NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()))
             return;
 
@@ -76,9 +67,11 @@ public class TestRdeEnrollmentActivity extends AppCompatActivity
             userArgs.setFileByteCount(10);
             userArgs.setDisplayName("The Enrollment Test Activity");
             try (final var doc = new AndroidRdeDocument()) {
-                doc.open(tag, SPEC2014BacKey);
-                dg14content = doc.getFileContent(14);
-                var result = doc.getEnrollmentArgs(userArgs, dg14content);
+                //doc.open(tag, SPEC2014BacKey);
+                dg14content = doc.doJobTest();
+                System.out.println("Actual:  " + Hex.toHexString(dg14content));
+                final var HexEncodedDg14 = "6E8201D9318201D5300D060804007F0007020202020101300F060A04007F000702020302040201013012060A04007F0007020204020402010202010E30170606678108010105020101060A04007F0007010104010330820184060904007F000702020102308201753082011D06072A8648CE3D020130820110020101303406072A8648CE3D0101022900D35E472036BC4FB7E13C785ED201E065F98FCFA6F6F40DEF4F92B9EC7893EC28FCD412B1F1B32E27305404283EE30B568FBAB0F883CCEBD46D3F3BB8A2A73513F5EB79DA66190EB085FFA9F492F375A97D860EB40428520883949DFDBC42D3AD198640688A6FE13F41349554B49ACC31DCCD884539816F5EB4AC8FB1F1A604510443BD7E9AFB53D8B85289BCC48EE5BFE6F20137D10A087EB6E7871E2A10A599C710AF8D0D39E2061114FDD05545EC1CC8AB4093247F77275E0743FFED117182EAA9C77877AAAC6AC7D35245D1692E8EE1022900D35E472036BC4FB7E13C785ED201E065F98FCFA5B68F12A32D482EC7EE8658E98691555B44C5931102010103520004710DA6DAB5B770920D3D4D6807B02A13059BEFB4926E2D00CFDE4B4471571473A582934BBE92059800663578C83419E3563FE3E8AF3AE58B521D3741693C9CE19B312392CB00F59AF086863186706396";
+                System.out.println("Expected:" + HexEncodedDg14);
             }
         }
         catch (GeneralSecurityException e)
@@ -111,7 +104,7 @@ public class TestRdeEnrollmentActivity extends AppCompatActivity
             return;
         }
 
-        var intent = new Intent(getApplicationContext(), TestRdeEnrollmentActivity.class);
+        var intent = new Intent(getApplicationContext(), TestJobActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         var pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, new String[][]{new String[]{"android.nfc.tech.IsoDep"}});

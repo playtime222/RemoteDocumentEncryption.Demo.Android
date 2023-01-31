@@ -77,9 +77,9 @@ public class TestRdeRoundTripActivity extends AppCompatActivity
         try
         {
             byte[] dg14content;
-            try (final var doc = new AndroidRdeDocument()) {
-                doc.open(tag, SPEC2014BacKey);
-                dg14content = doc.getFileContent(14);
+            try (final var doc1 = new AndroidRdeDocument()) {
+                doc1.open(tag, SPEC2014BacKey);
+                dg14content = doc1.getFileContent(14);
                 //System.out.println("Target : " + file + " -> " + doc.getFileContent(file));
             }
 
@@ -88,9 +88,9 @@ public class TestRdeRoundTripActivity extends AppCompatActivity
             final var args = new UserSelectedEnrollmentArgs(file, length);
 
             RdeMessageParameters rbResult;
-            try (final var doc = new AndroidRdeDocument()) {
-                doc.open(tag, SPEC2014BacKey);
-                rbResult = doc.doTestRbCall(new Dg14Reader(dg14content), args.getShortFileId(), args.getFileByteCount());
+            try (final var doc2 = new AndroidRdeDocument()) {
+                    doc2.open(tag, SPEC2014BacKey);
+                rbResult = doc2.doTestRbCall(new Dg14Reader(dg14content), args.getShortFileId(), args.getFileByteCount());
             }
 
             System.out.println("Wrapped DG" + file + " response: " + Hex.toHexString(rbResult.getWrappedResponse()));
@@ -103,9 +103,9 @@ public class TestRdeRoundTripActivity extends AppCompatActivity
             mci.setRdeInfo(rdeInfo);
 
             byte[] decryptRbResponse;
-            try (final var doc = new AndroidRdeDocument()) {
-                doc.open(tag, SPEC2014BacKey);
-                decryptRbResponse = doc.getApduResponseForDecryption(mci, dg14content);
+            try (final var doc3 = new AndroidRdeDocument()) {
+                doc3.open(tag, SPEC2014BacKey);
+                decryptRbResponse = doc3.getApduResponseForDecryption(mci, dg14content);
             }
             var decryptRbResponseHex = Hex.toHexString(decryptRbResponse);
             var rbResultHex = Hex.toHexString(rbResult.getWrappedResponse());

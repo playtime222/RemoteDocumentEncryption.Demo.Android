@@ -57,5 +57,5 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_test_rde_session">TestRdeSessionActivity</string>
-    <string name="title_activity_show_nfc_connection_error">ShowNfcConnectionErrorActivity</string>
+    <string name="title_activity_show_nfc_connection_error">TestJobActivity</string>
 </resources>

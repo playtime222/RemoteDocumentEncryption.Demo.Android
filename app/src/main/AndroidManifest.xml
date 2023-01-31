@@ -15,7 +15,11 @@
         <activity
             android:name=".activities.Errors.ShowErrorActivity"
             android:label="@string/title_activity_show_nfc_connection_error"
-             />
+            />
+        <activity
+            android:name=".activities.TestJobActivity"
+            android:label="@string/title_activity_show_nfc_connection_error"
+            android:exported="true" />
         <activity
             android:name=".activities.MainActivity"
             android:exported="true">
@@ -31,9 +35,6 @@
             android:label="@string/title_activity_scan_token"
             android:theme="@style/Theme.RDESample.Fullscreen">
         </activity>
-        <activity
-            android:name=".activities.TestRdeRoundTripDrivingLicenceActivity"
-            android:exported="true" />
         <activity
             android:name=".activities.EnrollmentActivity"
             android:exported="true" />
@@ -67,6 +68,9 @@
             android:exported="true" />
         <activity
             android:name=".activities.TestCaSessionActivity"
+            android:exported="true" />
+        <activity
+            android:name=".activities.TestRdeRoundTripDrivingLicenceActivity"
             android:exported="true" />
     </application>
 
