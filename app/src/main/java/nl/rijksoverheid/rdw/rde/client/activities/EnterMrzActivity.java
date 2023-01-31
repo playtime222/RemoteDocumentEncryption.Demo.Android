@@ -14,16 +14,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
+import nl.rijksoverheid.rdw.rde.client.MessageMetadata;
 import nl.rijksoverheid.rdw.rde.client.R;
-import nl.rijksoverheid.rdw.rde.client.activities.Errors.ShowErrorActivity;
 
-public class EnrollmentActivity extends AppCompatActivity
+public class EnterMrzActivity extends AppCompatActivity
 {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
     private EditText editTextDocumentId;
     private EditText editTextDob;
     private EditText editTextDocDoe;
-    private EditText editTextDisplayName;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState)
@@ -33,15 +32,16 @@ public class EnrollmentActivity extends AppCompatActivity
             // nothing to do
         });
 
+        var message = getIntent().getLongExtra(DecryptMessageActivity.DECRYPT_MESSAGE_ID, -1);
+
         getSupportActionBar().setTitle(R.string.appbar_title);
-        getSupportActionBar().setSubtitle("Enrollment - Enter document details");
+        getSupportActionBar().setSubtitle("Decrypting - Enter MRZ");
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_document_enroll);
+        setContentView(R.layout.activity_document_enter_mrz);
 
         final var clickButton = (Button) findViewById(R.id.buttonEnroll);
 
-        editTextDisplayName = findViewById(R.id.editTextDisplayName);
         editTextDocumentId = findViewById(R.id.editTextDocumentId);
         editTextDob = findViewById(R.id.editTextDob);
         editTextDocDoe = findViewById(R.id.editTextDocDoe);
@@ -60,15 +60,15 @@ public class EnrollmentActivity extends AppCompatActivity
 
             if (!storedBacKey.isComplete()) {
                 System.out.println("BAC Key is not complete");
-                ShowErrorActivity.show("The MRZ information is not complete. Please try again.", this);
                 return;
             }
 
             final var sp = new AppSharedPreferences(this);
             sp.write(storedBacKey);
-            sp.writeDocumentDisplayName(editTextDisplayName.getText().toString());
 
-            final var intent = new Intent(getApplicationContext(), EnrollmentReadDocumentActivity.class);
+
+            final var intent = new Intent(getApplicationContext(), DecryptMessageActivity.class);
+            intent.putExtra(DecryptMessageActivity.DECRYPT_MESSAGE_ID, message);
             startActivity(intent);
         });
     }

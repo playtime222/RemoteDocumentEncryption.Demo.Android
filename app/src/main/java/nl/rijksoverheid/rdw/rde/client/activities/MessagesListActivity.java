@@ -1,6 +1,5 @@
 package nl.rijksoverheid.rdw.rde.client.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,6 +25,7 @@ import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
 import nl.rijksoverheid.rdw.rde.client.MessageMetadata;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.SimpleArrayAdapter;
+import nl.rijksoverheid.rdw.rde.client.activities.Errors.ShowErrorActivity;
 import nl.rijksoverheid.rdw.rde.client.lib.HttpResponse;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
 import nl.rijksoverheid.rdw.rde.client.lib.data.ReceivedMessageList;
@@ -58,13 +58,19 @@ public class MessagesListActivity extends AppCompatActivity implements AdapterVi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_messages);
 
-        final HttpResponse<ReceivedMessageList> messageListResult;
+        HttpResponse<ReceivedMessageList> messageListResult = null;
         try {
             final var sp = new AppSharedPreferences(this);
             final var servicesToken = sp.readApiToken();
             messageListResult = new RdeServerProxy().getMessages(servicesToken);
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
             e.printStackTrace();
+
+            if (messageListResult == null)
+                ShowErrorActivity.show("Could not contact server or obtain message list.", this);
+            else
+                ShowErrorActivity.show("Could not contact server or obtain message list: " + messageListResult.getCode() + "/" + messageListResult.getMessage(), this);
+
             return;
         }
 
@@ -106,7 +112,7 @@ public class MessagesListActivity extends AppCompatActivity implements AdapterVi
             throw new IllegalArgumentException();
 
         final var itemAtPosition = adapter.getItemAtPosition(position);
-        final var intent = new Intent(getApplicationContext(), DecryptMessageActivity.class);
+        final var intent = new Intent(getApplicationContext(), EnterMrzActivity.class);
         intent.putExtra(DecryptMessageActivity.DECRYPT_MESSAGE_ID, ((MessageMetadata)itemAtPosition).getId());
         MessagesListActivity.this.startActivity(intent);
     }

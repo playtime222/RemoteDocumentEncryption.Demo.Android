@@ -11,6 +11,7 @@ import net.sf.scuba.util.Hex;
 
 import nl.rijksoverheid.rdw.rde.casessionutilities.RdeMessageParameters;
 import nl.rijksoverheid.rdw.rde.client.SecureWrapperDebug;
+import nl.rijksoverheid.rdw.rde.client.activities.Errors.ShowErrorActivity;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentConfig;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentEnrollmentInfo;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
@@ -30,12 +31,10 @@ import org.jmrtd.protocol.EACCAProtocol;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Optional;
@@ -49,6 +48,8 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
     private PassportService passportService;
     private IsoDep isoDep;
 
+    private String errorMessage = "";
+
     private final RdeDocumentContentAuthentication authenticator = new RdeDocumentContentAuthentication();
     private SODFile sodFile;
 
@@ -58,28 +59,6 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
 
         return shortFileIdentifier + 0x100;
     }
-
-//    public void open(Tag tag, PACEKeySpec paceKeySpec)
-//            throws CardServiceException, GeneralSecurityException, IOException {
-//        if (tag == null)
-//            throw new IllegalArgumentException();
-//        if (paceKeySpec == null)
-//            throw new IllegalArgumentException();
-//
-//        if (isOpen())
-//            throw new IllegalStateException();
-//
-//        isoDep = IsoDep.get(tag);
-//        isoDep.setTimeout(100000); //Long cos debugging
-//        cardService = CardService.getInstance(isoDep);
-//        //CardService service, int maxTranceiveLengthForPACEProtocol, int maxTranceiveLengthForSecureMessaging, int maxBlockSize, boolean isSFIEnabled, boolean shouldCheckMAC
-//        passportService = new PassportService(cardService, 256, 256, true, true);
-//        passportService.open();
-//        passportService.sendSelectApplet(false);
-//
-//        if (!doPace(paceKeySpec))
-//            throw new IllegalStateException("Cannot start PACE.");
-//    }
 
     public void open(Tag tag, BACKey bacKey)
             throws CardServiceException, GeneralSecurityException, IOException {
@@ -97,25 +76,24 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         passportService = new PassportService(cardService, RdeDocumentConfig.TRANCEIVE_LENGTH_FOR_SECURE_MESSAGING, RdeDocumentConfig.MAX_BLOCK_SIZE, true, true);
         passportService.open();
 
-        if (doPace(bacKey))
+        if (doPace(PACEKeySpec.createMRZKey(bacKey))) {
             return;
+        }
 
         if (!doBac(bacKey))
             throw new IllegalStateException("Cannot start PACE or BAC.");
     }
 
-    private boolean doPace(BACKey bacKey) throws IOException, GeneralSecurityException
+    private boolean doPace(PACEKeySpec paceKey) throws IOException, GeneralSecurityException
     {
         try {
-            passportService.sendSelectApplet(false);
             var paceInfo = findPaceSecurityInfo();
             if (!paceInfo.isPresent())
                 return false;
 
             //TODO use Card Authentication Number
             final var p = paceInfo.get();
-            var paceKey = PACEKeySpec.createMRZKey(bacKey);
-            passportService.doPACE(paceKey, p.getObjectIdentifier(), PACEInfo.toParameterSpec(p.getParameterId()));
+            passportService.doPACE(paceKey, p.getObjectIdentifier(), PACEInfo.toParameterSpec(p.getParameterId()), p.getParameterId());
             passportService.sendSelectApplet(true);
             System.out.println("PACE succeeded.");
             return true;
@@ -127,35 +105,10 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
         }
     }
 
-//    //For xxxx -> 0.4.0.127.0.7.2.2.4.2.4, PACEInfo [protocol: id-PACE-ECDH-GM-AES-CBC-CMAC-256, version: 2, parameterId: BrainpoolP320r1]
-//    private boolean doPace(PACEKeySpec paceKey) throws IOException, GeneralSecurityException
-//    {
-//        try {
-//            var paceInfo = findPaceSecurityInfo();
-//            if (!paceInfo.isPresent())
-//                return false;
-//
-//            //TODO use Card Authentication Number
-//            final var p = paceInfo.get();
-//            final var objectIdentifier = p.getObjectIdentifier();
-//            final var parameterId = p.getParameterId();
-//            final var params = PACEInfo.toParameterSpec(parameterId);
-//            passportService.doPACE(paceKey, objectIdentifier, params);
-//            passportService.sendSelectApplet(true);
-//            System.out.println("PACE succeeded.");
-//            return true;
-//        }
-//        catch (CardServiceException ex) {
-//            System.out.println("PACE failed.");
-//            System.out.println(ex);
-//            return false;
-//        }
-//    }
-
     private boolean doBac(BACKey bacKey)
     {
         try {
-            passportService.sendSelectApplet(false);
+            passportService.sendSelectApplet(false); //TODO remove repetition?
             passportService.doBAC(bacKey);
             System.out.println("BAC succeeded.");
             return true;
@@ -170,7 +123,7 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
 
     private Optional<PACEInfo> findPaceSecurityInfo() throws IOException
     {
-        try(final var stream = passportService.getInputStream(PassportService.EF_CARD_ACCESS))
+        try(final var stream = passportService.getInputStream(PassportService.EF_CARD_ACCESS, 1024))
         {
             final var f = new CardAccessFile(stream);
             final var items = f.getSecurityInfos();
@@ -273,17 +226,16 @@ public class AndroidRdeDocument implements AutoCloseable //, RdeDocument
 
     private SODFile getEfSod() throws CardServiceException, IOException, GeneralSecurityException {
         if (sodFile == null) {
-            try (var is = passportService.getInputStream(PassportService.EF_SOD)) {
+            try (var is = passportService.getInputStream(PassportService.EF_SOD, RdeDocumentConfig.MAX_BLOCK_SIZE)) {
                 sodFile = new SODFile(is);
             }
             authenticator.throwIfNotAuthentic(sodFile);
         }
         return sodFile;
     }
-
     private byte[] readFileContent(int shortFileId) throws IOException, CardServiceException {
         var fileId = toFileIdentifier(shortFileId);
-        try (var stream = passportService.getInputStream((short) fileId)) {
+        try (var stream = passportService.getInputStream((short) fileId, RdeDocumentConfig.MAX_BLOCK_SIZE)) {
             return readAllBytes(stream);
         }
     }

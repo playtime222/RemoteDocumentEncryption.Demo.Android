@@ -20,7 +20,7 @@ import org.jmrtd.BACKey;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import nl.rijksoverheid.rdw.rde.casessionutilities.RdeMessageParameters;
+import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
@@ -28,7 +28,7 @@ import nl.rijksoverheid.rdw.rde.messaging.MessageCipherInfo;
 import nl.rijksoverheid.rdw.rde.messaging.RdeMessageDecryptionInfo;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
-public class TestRdeRoundTripActivity extends AppCompatActivity
+public class TestRdeEnrollmentActivity extends AppCompatActivity
 {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;
 
@@ -60,63 +60,26 @@ public class TestRdeRoundTripActivity extends AppCompatActivity
         if (tag == null)
             throw new IllegalStateException("Test failed. No NfcAdaptor Tag.");
 
-        //Speci2014
         final String DOCUMENT_NUMBER = "SPECI2014";
         final String DATE_OF_BIRTH = "650310";
         final String DATE_OF_EXPIRY = "240309";
-
-//        //Rijbewijs
-//        final String DOCUMENT_NUMBER = "509496111";
-//        final String DATE_OF_BIRTH = "810217";
-//        final String DATE_OF_EXPIRY = "241115";
-
         final var SPEC2014BacKey = new BACKey(DOCUMENT_NUMBER,DATE_OF_BIRTH,DATE_OF_EXPIRY);
 
-        var file = 2;
-        var length = 100;
+        if (!NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()))
+            return;
+
+        byte[] dg14content;
         try
         {
-            byte[] dg14content;
+            var userArgs = new UserSelectedEnrollmentArgs();
+            userArgs.setShortFileId(2);
+            userArgs.setFileByteCount(10);
+            userArgs.setDisplayName("The Enrollment Test Activity");
             try (final var doc = new AndroidRdeDocument()) {
                 doc.open(tag, SPEC2014BacKey);
                 dg14content = doc.getFileContent(14);
-                //System.out.println("Target : " + file + " -> " + doc.getFileContent(file));
+                var result = doc.getEnrollmentArgs(userArgs, dg14content);
             }
-
-            System.out.println("DG14 : " +Hex.toHexString(dg14content));
-
-            final var args = new UserSelectedEnrollmentArgs(file, length);
-
-            RdeMessageParameters rbResult;
-            try (final var doc = new AndroidRdeDocument()) {
-                doc.open(tag, SPEC2014BacKey);
-                rbResult = doc.doTestRbCall(new Dg14Reader(dg14content), args.getShortFileId(), args.getFileByteCount());
-            }
-
-            System.out.println("Wrapped DG" + file + " response: " + Hex.toHexString(rbResult.getWrappedResponse()));
-
-            //TODO pcd pub key and from send message
-            var mci = new MessageCipherInfo();
-            var rdeInfo = new RdeMessageDecryptionInfo();
-            rdeInfo.setPcdPublicKey(Hex.toHexString(rbResult.getEphemeralPublicKey()));
-            rdeInfo.setCommand(Hex.toHexString(rbResult.getWrappedCommand()));
-            mci.setRdeInfo(rdeInfo);
-
-            byte[] decryptRbResponse;
-            try (final var doc = new AndroidRdeDocument()) {
-                doc.open(tag, SPEC2014BacKey);
-                decryptRbResponse = doc.getApduResponseForDecryption(mci, dg14content);
-            }
-            var decryptRbResponseHex = Hex.toHexString(decryptRbResponse);
-            var rbResultHex = Hex.toHexString(rbResult.getWrappedResponse());
-
-            System.out.println("Encrypt Response: " + rbResultHex);
-            System.out.println("Decrypt Response: " + decryptRbResponseHex);
-
-            if (!rbResultHex.equals(decryptRbResponseHex))
-                System.out.println("FAIL! FAIL! FAIL! FAIL! FAIL! FAIL! FAIL! FAIL! FAIL! ");
-            else
-                System.out.println("SUCCESS!");
         }
         catch (GeneralSecurityException e)
         {
@@ -148,7 +111,7 @@ public class TestRdeRoundTripActivity extends AppCompatActivity
             return;
         }
 
-        var intent = new Intent(getApplicationContext(), TestRdeRoundTripActivity.class);
+        var intent = new Intent(getApplicationContext(), TestRdeEnrollmentActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         var pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, new String[][]{new String[]{"android.nfc.tech.IsoDep"}});

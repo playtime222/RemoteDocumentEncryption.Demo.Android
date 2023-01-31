@@ -1,7 +1,12 @@
 plugins {
     id 'com.android.application'
 }
-
+android {
+    //...
+    lintOptions {
+        abortOnError false
+    }
+}
 android {
     compileSdk 30
 
@@ -9,8 +14,8 @@ android {
         applicationId "nl.rijksoverheid.rdw.rde.client"
         minSdk 26
         targetSdk 26
-        versionCode 1
-        versionName "1.1"
+        versionCode 4
+        versionName "1.2.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -46,7 +51,7 @@ dependencies {
 
     //MRTDs
     implementation 'net.sf.scuba:scuba-sc-android:0.0.23'
-    implementation 'org.jmrtd:jmrtd:0.7.32'
+    implementation ('org.jmrtd:jmrtd:0.7.32') { version { strictly( "0.7.32" )}}
 
     //QR codes
     //implementation 'me.dm7.barcodescanner:zxing:1.9.8'
