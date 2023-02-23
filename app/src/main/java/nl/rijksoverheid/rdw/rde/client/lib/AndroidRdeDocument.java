@@ -11,13 +11,13 @@ import net.sf.scuba.util.Hex;
 
 import nl.rijksoverheid.rdw.rde.casessionutilities.RdeMessageParameters;
 import nl.rijksoverheid.rdw.rde.client.SecureWrapperDebug;
-import nl.rijksoverheid.rdw.rde.client.activities.Errors.ShowErrorActivity;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentConfig;
 import nl.rijksoverheid.rdw.rde.documents.RdeDocumentEnrollmentInfo;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 import nl.rijksoverheid.rdw.rde.mrtdfiles.RdeDocumentContentAuthentication;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import org.jmrtd.BACKey;
 import org.jmrtd.PACEKeySpec;
 import org.jmrtd.PassportService;

@@ -25,7 +25,6 @@ import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.messaging.MessageCipherInfo;
 import nl.rijksoverheid.rdw.rde.messaging.RdeMessageDecryptionInfo;
-import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
 public class TestCrossPlatformDecryptionActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> nfcSettingsLauncher;

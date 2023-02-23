@@ -2,14 +2,10 @@ package nl.rijksoverheid.rdw.rde.client.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Debug;
-import 	android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import nl.rijksoverheid.rdw.rde.client.App;
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
-import okhttp3.internal.platform.android.AndroidLog;
 
 //Routes to the correct starting activity
 public class MainActivity extends AppCompatActivity {

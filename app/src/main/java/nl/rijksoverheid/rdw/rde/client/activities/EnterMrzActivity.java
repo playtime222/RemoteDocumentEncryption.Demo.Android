@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.MenuItemHandler;
-import nl.rijksoverheid.rdw.rde.client.MessageMetadata;
 import nl.rijksoverheid.rdw.rde.client.R;
 
 public class EnterMrzActivity extends AppCompatActivity

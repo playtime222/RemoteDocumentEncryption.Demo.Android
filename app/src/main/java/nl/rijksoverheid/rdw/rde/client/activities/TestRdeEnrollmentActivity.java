@@ -13,20 +13,15 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import net.sf.scuba.smartcards.CardServiceException;
-import net.sf.scuba.util.Hex;
 
 import org.jmrtd.BACKey;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import nl.rijksoverheid.rdw.rde.client.AppSharedPreferences;
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.documents.UserSelectedEnrollmentArgs;
-import nl.rijksoverheid.rdw.rde.messaging.MessageCipherInfo;
-import nl.rijksoverheid.rdw.rde.messaging.RdeMessageDecryptionInfo;
-import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
 public class TestRdeEnrollmentActivity extends AppCompatActivity
 {

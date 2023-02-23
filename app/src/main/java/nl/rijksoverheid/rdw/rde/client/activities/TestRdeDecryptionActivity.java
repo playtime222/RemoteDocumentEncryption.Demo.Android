@@ -14,7 +14,6 @@ import android.provider.Settings;
 
 import net.sf.scuba.smartcards.CardServiceException;
 
-import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 import org.jmrtd.BACKey;
 
@@ -23,9 +22,7 @@ import java.security.GeneralSecurityException;
 
 import nl.rijksoverheid.rdw.rde.client.R;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
-import nl.rijksoverheid.rdw.rde.documents.*;
 import nl.rijksoverheid.rdw.rde.messaging.*;
-import nl.rijksoverheid.rdw.rde.mrtdfiles.Dg14Reader;
 
 //todo RENAME to TestDecryptingRbResponse
 public class TestRdeDecryptionActivity extends AppCompatActivity

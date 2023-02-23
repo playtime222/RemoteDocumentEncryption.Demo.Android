@@ -6,8 +6,6 @@ import android.content.SharedPreferences;
 
 import com.google.gson.Gson;
 
-import org.jmrtd.BACKey;
-
 import nl.rijksoverheid.rdw.rde.client.lib.ServicesToken;
 
 public class AppSharedPreferences {

@@ -2,14 +2,8 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
+        mavenLocal()
         mavenCentral()
-
-//        repositories {
-//            flatDir {
-//                //dirs '..\\..\\rde-lib\\build\\libs'
-//                dirs 'D:\\Repos\\rdwgithub\\rde-lib\\build\\libs'
-//            }
-//        }
     }
 }
 rootProject.name = "RDW RDE Android Client Sample"

@@ -34,9 +34,9 @@ import nl.rijksoverheid.rdw.rde.client.SimpleDecryptedMessage;
 import nl.rijksoverheid.rdw.rde.client.activities.Errors.ShowErrorActivity;
 import nl.rijksoverheid.rdw.rde.client.lib.AndroidRdeDocument;
 import nl.rijksoverheid.rdw.rde.client.lib.RdeServerProxy;
-import nl.rijksoverheid.rdw.rde.crypto.*;
-import nl.rijksoverheid.rdw.rde.messaging.*;
-import nl.rijksoverheid.rdw.rde.messaging.zipV2.*;
+import nl.rijksoverheid.rdw.rde.crypto.Crypto;
+import nl.rijksoverheid.rdw.rde.messaging.MessageCipherInfo;
+import nl.rijksoverheid.rdw.rde.messaging.zipV2.ZipMessageDecoder;
 
 public class DecryptMessageActivity extends AppCompatActivity
 {
